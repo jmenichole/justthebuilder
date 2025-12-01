@@ -1,0 +1,590 @@
+<!--
+  Degens Against Decency - Main Landing Page
+  
+  Copyright (c) 2024 Degens Against Decency
+  Licensed under the MIT License
+  See LICENSE file in the project root for full license information.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Degens Against Decency - The Ultimate Party Game Platform</title>
+  <link rel="stylesheet" href="/styles/main.css" />
+  <style>
+    /* About section */
+    .about {
+      padding: 100px 0;
+      background: rgba(5, 6, 10, 0.6);
+    }
+
+    .about h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 60px;
+      background: linear-gradient(135deg, var(--brand-green), var(--brand-purple), var(--brand-teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .about-content {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 60px;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .about-text p {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      color: var(--text-light);
+      line-height: 1.8;
+    }
+
+    .about-stats {
+      display: grid;
+      gap: 30px;
+    }
+
+    .stat {
+      text-align: center;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 15px;
+      border: 1px solid rgba(180, 255, 57, 0.2);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 15px rgba(180, 255, 57, 0.2), 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .stat:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 25px rgba(180, 255, 57, 0.4), 0 8px 16px rgba(0, 0, 0, 0.4);
+      border-color: rgba(180, 255, 57, 0.4);
+    }
+
+    .stat h3 {
+      font-size: 2.5rem;
+      color: var(--brand-green);
+      margin-bottom: 10px;
+      text-shadow: 0 0 20px rgba(180, 255, 57, 0.5);
+    }
+
+    .stat p {
+      color: var(--text-light);
+      font-weight: 500;
+    }
+
+    /* Games section */
+    .games {
+      padding: 100px 0;
+      background: var(--brand-dark);
+    }
+
+    .games h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 60px;
+      background: linear-gradient(135deg, var(--brand-green), var(--brand-teal), var(--brand-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .game-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 40px;
+      margin-top: 40px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0 20px;
+    }
+
+    .game-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(180, 255, 57, 0.2);
+      border-radius: 20px;
+      padding: 40px;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(180, 255, 57, 0.1), 0 8px 24px rgba(0, 0, 0, 0.4), 0 16px 48px rgba(0, 0, 0, 0.2);
+    }
+
+    .game-card:hover {
+      transform: translateY(-10px);
+      border-color: var(--brand-green);
+      box-shadow: 0 0 30px rgba(180, 255, 57, 0.5), 0 20px 40px rgba(180, 255, 57, 0.2), 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .game-icon {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .game-card h3 {
+      color: var(--brand-green);
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+      text-align: center;
+    }
+
+    .game-card p {
+      color: var(--text-light);
+      margin-bottom: 20px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .game-card ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .game-card li {
+      color: var(--brand-teal);
+      margin-bottom: 8px;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .game-card li::before {
+      content: '▶';
+      position: absolute;
+      left: 0;
+      color: var(--brand-green);
+    }
+
+    /* Features section */
+    .features {
+      padding: 100px 0;
+      background: rgba(15, 15, 26, 0.8);
+    }
+
+    .features h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 60px;
+      background: linear-gradient(135deg, var(--brand-green), var(--brand-teal), var(--brand-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 40px;
+      margin-top: 60px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0 20px;
+    }
+
+    .feature {
+      text-align: center;
+      padding: 40px 30px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 20px;
+      border: 1px solid rgba(180, 255, 57, 0.2);
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .feature:hover {
+      transform: translateY(-5px);
+      border-color: var(--brand-green);
+      box-shadow: 0 0 20px rgba(180, 255, 57, 0.4), 0 10px 30px rgba(180, 255, 57, 0.2), 0 8px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+
+    .feature h3 {
+      color: var(--brand-green);
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+
+    .feature p {
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+
+    /* Getting Started section */
+    .getting-started {
+      padding: 100px 0;
+      background: var(--brand-dark);
+      text-align: center;
+    }
+
+    .getting-started h2 {
+      font-size: 2.5rem;
+      margin-bottom: 60px;
+      background: linear-gradient(135deg, var(--brand-green), var(--brand-purple), var(--brand-teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      margin-bottom: 60px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0 20px;
+    }
+
+    .step {
+      padding: 40px 30px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 20px;
+      border: 1px solid rgba(180, 255, 57, 0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .step-number {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand-green), var(--brand-purple));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0 auto 20px;
+      box-shadow: 0 0 20px rgba(180, 255, 57, 0.5);
+    }
+
+    .step h3 {
+      color: var(--brand-green);
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+
+    .step p {
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+
+    .cta-section {
+      margin-top: 60px;
+    }
+
+    .disclaimer {
+      margin-top: 20px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--brand-darker);
+      padding: 80px 0 40px;
+      border-top: 1px solid rgba(180, 255, 57, 0.2);
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 60px;
+      margin-bottom: 40px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0 20px;
+    }
+
+    .footer-logo img {
+      height: 60px;
+      margin-bottom: 20px;
+    }
+
+    .footer-logo p {
+      color: var(--text-light);
+      font-size: 1.1rem;
+    }
+
+    .footer-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 40px;
+    }
+
+    .footer-links h4 {
+      color: var(--brand-green);
+      margin-bottom: 20px;
+      font-size: 1.2rem;
+    }
+
+    .footer-links ul {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 10px;
+    }
+
+    .footer-links a {
+      color: var(--text-light);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--brand-green);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-bottom p {
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .about-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      
+      .about-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      
+      .stat {
+        padding: 20px;
+      }
+      
+      .stat h3 {
+        font-size: 1.8rem;
+      }
+      
+      .game-cards,
+      .features-grid,
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+      
+      .footer-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        text-align: center;
+      }
+      
+      .footer-links {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <span style="font-size: 1.5rem; font-weight: bold; color: var(--brand-green);">🃏 Degens</span>
+      </div>
+      <div class="nav-links">
+        <a href="#about">About</a>
+        <a href="#games">Games</a>
+        <a href="#features">Features</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content-wrapper">
+      <div class="hero-logo">
+        <h1 style="font-size: 4rem; margin-bottom: 10px;">🃏</h1>
+      </div>
+      <h1>Degens Against Decency</h1>
+      <p class="tagline">The Ultimate Party Game Platform - Where chaos meets comedy in the digital age</p>
+      <div class="hero-cta">
+        <a href="arena.html" class="cta-button">🎮 Play Now</a>
+        <a href="#about" class="secondary-button">Learn More</a>
+      </div>
+      <p style="color: #888; margin-top: 15px; font-size: 0.9em;">
+        Join thousands of players in hilarious multiplayer chaos!
+      </p>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="about">
+    <div class="container">
+      <h2>What is Degens Against Decency?</h2>
+      <div class="about-content">
+        <div class="about-text">
+          <p>Degens Against Decency is a revolutionary party game platform that brings the irreverent humor of Cards Against Humanity into the digital age. Built for the internet generation, our platform combines AI-generated content with multiplayer mayhem to create unforgettable gaming experiences.</p>
+          <p>Whether you're hosting a virtual party, breaking the ice with new friends, or just looking for some chaotic fun, our collection of games delivers laughs, surprises, and plenty of questionable content.</p>
+        </div>
+        <div class="about-stats">
+          <div class="stat">
+            <h3>1000+</h3>
+            <p>AI-Generated Cards</p>
+          </div>
+          <div class="stat">
+            <h3>Multiple</h3>
+            <p>Game Modes</p>
+          </div>
+          <div class="stat">
+            <h3>Real-time</h3>
+            <p>Multiplayer Action</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Games Section -->
+  <section id="games" class="games">
+    <div class="container">
+      <h2>The Game</h2>
+      <div class="game-cards">
+        <div class="game-card">
+          <div class="game-icon">🃏</div>
+          <h3>Degens Against Decency</h3>
+          <p>Cards Against Humanity for the internet generation. AI-powered prompts and responses ensure fresh, hilarious content every round. Play with friends or let our AI bots join the chaos!</p>
+          <ul>
+            <li>AI-generated content</li>
+            <li>3-10 players</li>
+            <li>Bot support for solo play</li>
+            <li>Real-time multiplayer</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="container">
+      <h2>Why Choose Our Platform?</h2>
+      <div class="features-grid">
+        <div class="feature">
+          <div class="feature-icon">🤖</div>
+          <h3>AI-Generated Content</h3>
+          <p>Our advanced AI continuously creates fresh, hilarious, and contextually relevant content. No more stale card combinations - every game feels new and exciting.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">👥</div>
+          <h3>Seamless Multiplayer</h3>
+          <p>Connect with friends instantly through Discord integration. Create private rooms or join public games with players from around the world.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🎯</div>
+          <h3>Smart Bot Players</h3>
+          <p>Can't get enough players? Our AI bots automatically join to ensure you always have the minimum 3 players needed for a great game experience.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⚡</div>
+          <h3>Real-time Gameplay</h3>
+          <p>Experience lightning-fast real-time gameplay with instant updates, live chat, and synchronized game states across all players.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🛡️</div>
+          <h3>Privacy Focused</h3>
+          <p>We only access your Discord username and avatar. No data harvesting, no invasive permissions - just pure gaming fun.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🌐</div>
+          <h3>Cross-Platform</h3>
+          <p>Play on any device with a web browser. Mobile, tablet, desktop - the chaos travels with you wherever you go.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Getting Started Section -->
+  <section class="getting-started">
+    <div class="container">
+      <h2>Ready to Join the Chaos?</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Enter the Arena</h3>
+          <p>Click Play Now to enter the game arena directly</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Create or Join</h3>
+          <p>Create your own game room or join an existing one</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Start Playing</h3>
+          <p>Jump into games with friends or meet new degens!</p>
+        </div>
+      </div>
+      <div class="cta-section">
+        <a href="arena.html" class="cta-button">🎮 Play Now</a>
+        <p class="disclaimer">Must be 18+ to play. Content may be inappropriate for sensitive audiences.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer" id="contact">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <span style="font-size: 2rem;">🃏</span>
+          <p>Made by degens, for degens ❤️</p>
+        </div>
+        <div class="footer-links">
+          <div>
+            <h4>Platform</h4>
+            <ul>
+              <li><a href="arena.html">Game Arena</a></li>
+              <li><a href="#games">Available Games</a></li>
+              <li><a href="#features">Features</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Community</h4>
+            <ul>
+              <li><a href="https://discord.gg/degens" target="_blank" rel="noopener">Discord Server</a></li>
+              <li><a href="https://github.com/jmenichole/DegensAgainstDecency" target="_blank" rel="noopener">GitHub</a></li>
+              <li><a href="https://github.com/jmenichole/DegensAgainstDecency/issues" target="_blank" rel="noopener">Feedback</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Degens Against Decency. All rights reserved.</p>
+        <p>This project is not affiliated with Cards Against Humanity LLC.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
