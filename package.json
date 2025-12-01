@@ -1,0 +1,23 @@
+{
+  "name": "justthebuilder",
+  "version": "1.0.0",
+  "description": "AI-powered Discord server builder bot for automated server setup.",
+  "main": "src/bot.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/bot.js",
+    "dev": "nodemon src/bot.js",
+    "simulate": "node scripts/simulate.js",
+    "dry-run": "node scripts/runLocalBlueprint.js data/blueprints/example.json || true"
+  },
+  "dependencies": {
+    "discord.js": "^14.15.1",
+    "dotenv": "^16.4.0",
+    "axios": "^1.6.8",
+    "ajv": "^8.12.0",
+    "ajv-formats": "^2.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

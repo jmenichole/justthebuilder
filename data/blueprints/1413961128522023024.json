@@ -1,0 +1,82 @@
+{
+  "style": {
+    "theme": "dark-cyberpunk"
+  },
+  "roles": [
+    {
+      "name": "Owner",
+      "permissions": [
+        "Administrator"
+      ]
+    },
+    {
+      "name": "Admin",
+      "permissions": [
+        "Administrator"
+      ]
+    },
+    {
+      "name": "Mod",
+      "permissions": [
+        "ManageMessages"
+      ]
+    },
+    {
+      "name": "VIP"
+    },
+    {
+      "name": "Verified"
+    }
+  ],
+  "categories": {
+    "INFO": [
+      {
+        "name": "rules",
+        "type": "text",
+        "permissionsPreset": "public-readonly",
+        "message": {
+          "title": "💎 Server Guidelines",
+          "body": "1. DYOR - Do Your Own Research\n2. No financial advice or guaranteed returns\n3. Verify all links before clicking\n4. No impersonation of team members or influencers\n5. Keep FUD and price discussion in designated channels\n6. Respect others' investment decisions\n\nStay safe, stay informed. NFA."
+        }
+      },
+      {
+        "name": "welcome",
+        "type": "text"
+      },
+      {
+        "name": "about",
+        "type": "text",
+        "message": {
+          "title": "🧩 About This Server",
+          "body": "Welcome to Just.The.Tip!\n\nSupport/help desk\n\nWe're building a vibrant community - join the conversation and have fun!"
+        }
+      },
+      {
+        "name": "faq",
+        "type": "text",
+        "message": {
+          "title": "❓ Frequently Asked Questions",
+          "body": "**Q: Is this financial advice?**\nA: No. Always DYOR and never invest more than you can lose.\n\n**Q: How do I verify team members?**\nA: Check roles and verify in our official channels.\n\n**Q: Where can I discuss price?**\nA: Use the trading or price-talk channels only."
+        }
+      }
+    ],
+    "SUPPORT": [
+      {
+        "name": "help-desk",
+        "type": "text"
+      }
+    ],
+    "HELP": [
+      {
+        "name": "faq",
+        "type": "text"
+      }
+    ],
+    "GENERAL": [
+      {
+        "name": "chat",
+        "type": "text"
+      }
+    ]
+  }
+}

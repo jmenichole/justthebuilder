@@ -1,0 +1,10 @@
+{
+  "style": { "emojiPrefix": "💸", "theme": "neon-gold" },
+  "branding": { "color": "#FFD700", "accent": "#1A1A1A", "emoji": "💸" },
+  "roles": [ { "name": "Admin", "permissions": ["Administrator"] }, { "name": "Moderator", "permissions": ["ManageMessages"] }, { "name": "Whale" }, { "name": "Verified" } ],
+  "categories": {
+    "SERVER INFO": [ { "name": "welcome", "type": "text" }, { "name": "rules", "type": "text", "permissionsPreset": "public-readonly" } ],
+    "DEGEN ZONE": [ { "name": "chat", "type": "text" }, { "name": "alpha", "type": "text", "permissionsPreset": "verified-only" }, { "name": "casino-voice", "type": "voice" } ]
+  },
+  "webhooks": { "alpha": { "name": "AlphaFeed" } }
+}

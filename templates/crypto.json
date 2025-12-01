@@ -1,0 +1,9 @@
+{
+  "style": { "emojiPrefix": "🪙", "theme": "neon-gold" },
+  "roles": [ { "name": "Admin", "permissions": ["Administrator"] }, { "name": "Moderator", "permissions": ["ManageMessages"] }, { "name": "Verified" } ],
+  "categories": {
+    "SERVER INFO": [ { "name": "welcome", "type": "text" }, { "name": "about", "type": "text" } ],
+    "MARKET": [ { "name": "price-chat", "type": "text" }, { "name": "alpha", "type": "text", "permissionsPreset": "verified-only" } ],
+    "VOICE": [ { "name": "trading-floor", "type": "voice" } ]
+  }
+}

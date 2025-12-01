@@ -1,0 +1,9 @@
+{
+  "style": { "emojiPrefix": "🎮", "theme": "streamer-dark" },
+  "roles": [ { "name": "Admin", "permissions": ["Administrator"] }, { "name": "Moderator", "permissions": ["ManageMessages"] }, { "name": "Gamer" } ],
+  "categories": {
+    "SERVER INFO": [ { "name": "welcome", "type": "text" } ],
+    "LOBBY": [ { "name": "general-chat", "type": "text" }, { "name": "squad-voice", "type": "voice" } ],
+    "MATCHMAKING": [ { "name": "looking-for-group", "type": "text" } ]
+  }
+}

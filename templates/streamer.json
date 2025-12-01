@@ -1,0 +1,8 @@
+{
+  "style": { "emojiPrefix": "📺", "theme": "streamer-dark" },
+  "roles": [ { "name": "Admin", "permissions": ["Administrator"] }, { "name": "Mod", "permissions": ["ManageMessages"] }, { "name": "Subscriber" } ],
+  "categories": {
+    "SERVER INFO": [ { "name": "welcome", "type": "text" } ],
+    "LIVE": [ { "name": "live-chat", "type": "text" }, { "name": "clips", "type": "media" }, { "name": "lounge", "type": "voice" } ]
+  }
+}

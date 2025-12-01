@@ -1,0 +1,8 @@
+{
+  "style": { "theme": "minimal-clean" },
+  "roles": [ { "name": "Admin", "permissions": ["Administrator"] }, { "name": "Moderator", "permissions": ["ManageMessages"] }, { "name": "Member" } ],
+  "categories": {
+    "SERVER INFO": [ { "name": "welcome", "type": "text" }, { "name": "rules", "type": "text", "permissionsPreset": "public-readonly" } ],
+    "COMMUNITY": [ { "name": "chat", "type": "text" } ]
+  }
+}

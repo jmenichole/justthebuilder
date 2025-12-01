@@ -1,0 +1,144 @@
+{
+  "style": {
+    "emojiPrefix": "💸",
+    "theme": "neon-gold"
+  },
+  "community": true,
+  "roles": [
+    {
+      "name": "Admin",
+      "color": "#FFD700",
+      "permissions": [
+        "Administrator"
+      ],
+      "isStaff": true
+    },
+    {
+      "name": "Moderator",
+      "color": "#DAA520",
+      "permissions": [
+        "ManageMessages",
+        "EmbedLinks",
+        "AttachFiles",
+        "TimeoutMembers"
+      ],
+      "isModerator": true
+    },
+    {
+      "name": "Verified",
+      "color": "#00AAFF"
+    }
+  ],
+  "categories": {
+    "SERVER INFO": [
+      {
+        "name": "welcome",
+        "type": "text",
+        "message": {
+          "title": "Welcome",
+          "body": "Welcome to the server!"
+        },
+        "order": 0
+      },
+      {
+        "name": "rules",
+        "type": "text",
+        "message": {
+          "title": "Rules",
+          "body": "1. Be kind\n2. No spam\n3. Respect staff"
+        },
+        "permissionsPreset": "public-readonly",
+        "order": 1
+      },
+      {
+        "name": "about",
+        "type": "text",
+        "message": {
+          "title": "About",
+          "body": "This is a builder test server."
+        },
+        "order": 2
+      },
+      {
+        "name": "announcements",
+        "type": "announcement",
+        "permissionsPreset": "announcement-lock",
+        "order": 3
+      }
+    ],
+    "COMMUNITY": [
+      {
+        "name": "chat",
+        "type": "text",
+        "order": 0
+      },
+      {
+        "name": "clips",
+        "type": "media",
+        "order": 1
+      },
+      {
+        "name": "hangout-voice",
+        "type": "voice",
+        "order": 2
+      },
+      {
+        "name": "forum-topics",
+        "type": "forum",
+        "defaultAutoArchiveDuration": 1440,
+        "threadsLocked": false,
+        "order": 3
+      }
+    ],
+    "STAFF": [
+      {
+        "name": "admin-chat",
+        "type": "text",
+        "permissionsPreset": "staff-private",
+        "order": 0
+      },
+      {
+        "name": "mod-log",
+        "type": "text",
+        "permissionsPreset": "mods-only",
+        "readOnly": true,
+        "order": 1
+      }
+    ]
+  },
+  "categoryPrivacy": {
+    "STAFF": "staff-private"
+  },
+  "webhooks": {
+    "announcements": {
+      "name": "AnnouncementsFeed",
+      "avatar": "https://example.com/announce.png"
+    },
+    "clips": {
+      "name": "ClipsBot"
+    }
+  },
+  "private": {
+    "staff": [
+      "admin-chat",
+      "mod-log"
+    ]
+  },
+  "welcomeScreen": {
+    "description": "Welcome! Pick a channel below to get started.",
+    "prompts": [
+      {
+        "title": "Read the rules",
+        "channel": "rules",
+        "emoji": "📜",
+        "description": "Make sure you understand them."
+      },
+      {
+        "title": "Say hi",
+        "channel": "chat",
+        "emoji": "👋",
+        "description": "Introduce yourself!"
+      }
+    ]
+  }
+}
