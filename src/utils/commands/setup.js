@@ -221,7 +221,7 @@ export async function handleSetupInteraction(interaction, client) {
     // Edit channel topic/description
     if (topic) {
       try {
-        if (!channel.isTextBased() || channel.type === ChannelType.GuildVoice || channel.type === ChannelType.GuildStageVoice) {
+        if (!channel.isTextBased()) {
           results.push('⚠️ Topic can only be set on text-based channels.');
         } else {
           await channel.setTopic(topic);
@@ -257,7 +257,7 @@ export async function handleSetupInteraction(interaction, client) {
         } else {
           const message = await channel.messages.fetch(unpinMessageId);
           await message.unpin();
-          results.push(`📌 Message ${unpinMessageId} unpinned.`);
+          results.push(`🔓 Message ${unpinMessageId} unpinned.`);
         }
       } catch (err) {
         log(`Unpin message failed: ${err.message}`);
