@@ -18,12 +18,13 @@ AI-powered Discord bot that interviews the server owner, generates a validated J
 - Persistent blueprint storage (reapply / export / rollback)
 - Interactive onboarding (buttons + select menus)
 - Webhook auto-creation for announcement/media channels
- - Branding system (emoji + color applied to embeds & channel names)
- - Template packs (default, gaming, crypto, streamer, degen)
- - Usage logging (append-only metrics per build)
- - Guild config caching (stores last blueprint & metrics)
- - Additional slash subcommands: export / import / reapply / preview
- - Save blueprint as custom template (`/setup save-template <name>`) for reuse
+- Branding system (emoji + color applied to embeds & channel names)
+- Template packs (default, gaming, crypto, streamer, degen)
+- Usage logging (append-only metrics per build)
+- Guild config caching (stores last blueprint & metrics)
+- Additional slash subcommands: export / import / reapply / preview
+- Save blueprint as custom template (`/setup save-template <name>`) for reuse
+- Edit channel description/topic and pin/unpin messages (`/setup edit-channel`)
 
 ## Quick Start
 ```bash
@@ -113,7 +114,8 @@ Slash command lifecycle:
 - `/setup import` → Validate attached blueprint JSON via schema → Store without building.
 - `/setup reapply` → Build using last stored/imported blueprint (skips interview).
 - `/setup preview` → DM stored blueprint for inspection.
- - `/setup save-template <name>` → Persist last stored blueprint to `templates/<name>.json` for future reuse or sharing.
+- `/setup save-template <name>` → Persist last stored blueprint to `templates/<name>.json` for future reuse or sharing.
+- `/setup edit-channel <channel> [topic] [pin-message] [unpin-message]` → Edit channel description/topic or pin/unpin messages.
 
 ## Rollback Strategy (Future)
 Current rollback deletes channels then reapplies last stored blueprint. Full differential rollback planned (track created IDs).
