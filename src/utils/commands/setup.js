@@ -28,7 +28,18 @@ export const SetupCommandData = {
     { type: 1, name: "export", description: "Export current server into a blueprint" },
     { type: 1, name: "reapply", description: "Reapply last stored blueprint" },
     { type: 1, name: "import", description: "Import a blueprint JSON", options: [ { type: 11, name: 'file', description: 'Blueprint JSON file', required: true } ] },
-    { type: 1, name: "save-template", description: "Save last blueprint as named template", options: [ { type: 3, name: 'name', description: 'Template name', required: true } ] }
+    { type: 1, name: "save-template", description: "Save last blueprint as named template", options: [ { type: 3, name: 'name', description: 'Template name', required: true } ] },
+    { 
+      type: 1, 
+      name: "edit-channel", 
+      description: "Edit a channel's description/topic or pin/unpin a message", 
+      options: [
+        { type: 7, name: 'channel', description: 'The channel to edit', required: true },
+        { type: 3, name: 'topic', description: 'New topic/description for the channel', required: false },
+        { type: 3, name: 'pin-message', description: 'Message ID to pin in the channel', required: false },
+        { type: 3, name: 'unpin-message', description: 'Message ID to unpin from the channel', required: false }
+      ] 
+    }
   ]
 };
 
@@ -194,6 +205,67 @@ export async function handleSetupInteraction(interaction, client) {
       log('Template save failed: ' + err.message);
       await interaction.reply({ ephemeral: true, content: 'Failed to save template.' });
     }
+  } else if (sub === 'edit-channel') {
+    const channel = interaction.options.getChannel('channel');
+    const topic = interaction.options.getString('topic');
+    const pinMessageId = interaction.options.getString('pin-message');
+    const unpinMessageId = interaction.options.getString('unpin-message');
+
+    if (!topic && !pinMessageId && !unpinMessageId) {
+      return interaction.reply({ ephemeral: true, content: 'Please provide at least one option: topic, pin-message, or unpin-message.' });
+    }
+
+    await interaction.reply({ ephemeral: true, content: 'Processing channel edit…' });
+    const results = [];
+
+    // Edit channel topic/description
+    if (topic) {
+      try {
+        if (!channel.isTextBased() || channel.type === ChannelType.GuildVoice || channel.type === ChannelType.GuildStageVoice) {
+          results.push('⚠️ Topic can only be set on text-based channels.');
+        } else {
+          await channel.setTopic(topic);
+          results.push(`✅ Topic updated to: "${topic}"`);
+        }
+      } catch (err) {
+        log(`Edit channel topic failed: ${err.message}`);
+        results.push(`❌ Failed to update topic: ${err.message}`);
+      }
+    }
+
+    // Pin a message
+    if (pinMessageId) {
+      try {
+        if (!channel.isTextBased()) {
+          results.push('⚠️ Can only pin messages in text-based channels.');
+        } else {
+          const message = await channel.messages.fetch(pinMessageId);
+          await message.pin();
+          results.push(`📌 Message ${pinMessageId} pinned.`);
+        }
+      } catch (err) {
+        log(`Pin message failed: ${err.message}`);
+        results.push(`❌ Failed to pin message: ${err.message}`);
+      }
+    }
+
+    // Unpin a message
+    if (unpinMessageId) {
+      try {
+        if (!channel.isTextBased()) {
+          results.push('⚠️ Can only unpin messages in text-based channels.');
+        } else {
+          const message = await channel.messages.fetch(unpinMessageId);
+          await message.unpin();
+          results.push(`📌 Message ${unpinMessageId} unpinned.`);
+        }
+      } catch (err) {
+        log(`Unpin message failed: ${err.message}`);
+        results.push(`❌ Failed to unpin message: ${err.message}`);
+      }
+    }
+
+    await interaction.followUp({ ephemeral: true, content: results.join('\n') });
   }
 }
 
