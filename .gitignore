@@ -13,3 +13,6 @@ logs/
 
 # OS files
 .DS_Store
+
+# Local tunnel config (contains auth tokens)
+ngrok.yml

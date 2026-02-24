@@ -83,14 +83,25 @@ export const SetupCommandData = {
 async function confirmReset(interaction) {
   await interaction.reply({
     ephemeral: true,
-    content: "Type CONFIRM within 30s to proceed with reset." 
+    content: "React with ✅ within 30s to confirm, or ❌ to cancel."
   });
-  const filter = i => i.user.id === interaction.user.id;
+  const confirmMsg = await interaction.fetchReply();
   try {
-    const msg = await interaction.channel.awaitMessages({ max: 1, time: 30000 });
-    if (msg.first()?.content === "CONFIRM") return true;
+    await confirmMsg.react('✅');
+    await confirmMsg.react('❌');
   } catch {}
-  return false;
+  try {
+    const collected = await confirmMsg.awaitReactions({
+      filter: (reaction, user) =>
+        ['✅', '❌'].includes(reaction.emoji.name) && user.id === interaction.user.id,
+      max: 1,
+      time: 30000,
+      errors: ['time']
+    });
+    return collected.first()?.emoji.name === '✅';
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -160,12 +171,19 @@ export async function handleSetupInteraction(interaction, client) {
     userCooldowns.set(interaction.user.id, now);
     await interaction.reply({ ephemeral: true, content: preset ? `🚀 Launching **${preset}** quick-setup...` : "Launching interview..." });
     try {
-      if (!preset) await owner.send("Re-running server setup interview.");
+      if (!preset) {
+        try {
+          await owner.send("Re-running server setup interview.");
+        } catch (dmErr) {
+          log(`DM to owner failed: ${dmErr.message}`);
+          await interaction.followUp({ ephemeral: true, content: "⚠️ Could not DM you — please enable DMs from server members and try again." });
+          return;
+        }
+      }
       await runInterview(owner.user, interaction.guild, client, preset, isPremium);
     } catch (err) {
-      log(`Setup run DM failed: ${err.message}`);
-      await interaction.followUp({ ephemeral: true, content: "DM failed; running here." });
-      // Fallback not implemented for brevity
+      log(`runInterview error: ${err.message}`);
+      await interaction.followUp({ ephemeral: true, content: `❌ Something went wrong during setup: ${err.message}` });
     }
   } else if (sub === "reset") {
     const confirmed = await confirmReset(interaction);
@@ -283,8 +301,8 @@ export async function handleSetupInteraction(interaction, client) {
       const text = await fetch(attachment.url).then(r => r.text());
       const json = JSON.parse(text);
       const valid = validateBlueprint(json);
-      if (!valid) {
-        return interaction.followUp({ ephemeral: true, content: 'Validation errors: ' + validateBlueprint.errors.map(e => e.message).join('; ') });
+      if (!valid.valid) {
+        return interaction.followUp({ ephemeral: true, content: 'Validation errors: ' + valid.errors.map(e => `${e.instancePath} ${e.message}`).join('; ') });
       }
       const bpDir = path.resolve('data', 'blueprints');
       if (!fs.existsSync(bpDir)) fs.mkdirSync(bpDir, { recursive: true });

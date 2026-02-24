@@ -28,11 +28,8 @@ function assertEnv() {
   }
   const masked = token.slice(0, 6) + "..." + token.slice(-4);
   log(`Token loaded (masked): ${masked}`);
-  if (!process.env.AI_GATEWAY_URL) {
-    log("Warning: AI_GATEWAY_URL not set; interview AI calls will fail.");
-  }
-  if (!process.env.AI_GATEWAY_KEY) {
-    log("Warning: AI_GATEWAY_KEY not set; interview AI calls will fail.");
+  if (!process.env.OPENAI_API_KEY && !process.env.AI_GATEWAY_API_KEY) {
+    log("Warning: OPENAI_API_KEY not set; interview AI calls will fail.");
   }
 }
 assertEnv();
@@ -43,9 +40,10 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.DirectMessages,
-    GatewayIntentBits.GuildMessages
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions
   ],
-  partials: [Partials.Channel]
+  partials: [Partials.Channel, Partials.Message, Partials.Reaction]
 });
 
 client.once("ready", async () => {
