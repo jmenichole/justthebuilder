@@ -22,8 +22,29 @@ export const SetupCommandData = {
   name: "setup",
   description: "Run or reset the automated server builder.",
   options: [
-    { type: 1, name: "run", description: "Run the interview flow again" },
+    { 
+      type: 1, 
+      name: "run", 
+      description: "Run the automated server builder",
+      options: [
+        {
+          type: 3,
+          name: "preset",
+          description: "⚡ Fast-track with a preset (Premium)",
+          required: false,
+          choices: [
+            { name: "🎮 Gaming Community", value: "gaming" },
+            { name: "💎 Crypto/Web3", value: "crypto" },
+            { name: "🎥 Content Creator", value: "content" },
+            { name: "💼 Professional", value: "professional" },
+            { name: "🛡️ Support Server", value: "support" }
+          ]
+        }
+      ]
+    },
     { type: 1, name: "reset", description: "Reset server structure (DANGEROUS)" },
+    { type: 1, name: "nuke", description: "☢️ Backup & Delete ALL channels (DANGEROUS)" },
+    { type: 1, name: "restore-backup", description: "⚠️ Restore server from a backup file (Immediate Build)", options: [ { type: 11, name: 'file', description: 'Backup JSON file', required: true } ] },
     { type: 1, name: "preview", description: "Preview last built blueprint JSON" },
     { type: 1, name: "export", description: "Export current server into a blueprint" },
     { type: 1, name: "reapply", description: "Reapply last stored blueprint" },
@@ -39,6 +60,17 @@ export const SetupCommandData = {
         { type: 3, name: 'pin-message', description: 'Message ID to pin in the channel', required: false },
         { type: 3, name: 'unpin-message', description: 'Message ID to unpin from the channel', required: false }
       ] 
+    },
+    {
+      type: 1,
+      name: "edit-message",
+      description: "💎 Edit a bot message/embed (Premium)",
+      options: [
+        { type: 7, name: 'channel', description: 'Channel containing the message', required: true },
+        { type: 3, name: 'message_id', description: 'ID of the message to edit', required: true },
+        { type: 3, name: 'title', description: 'New embed title', required: false },
+        { type: 3, name: 'body', description: 'New embed body text', required: false }
+      ]
     }
   ]
 };
@@ -97,7 +129,21 @@ export async function handleSetupInteraction(interaction, client) {
 
   const sub = interaction.options.getSubcommand();
 
+  // Check Premium Entitlement
+  const isPremium = process.env.PREMIUM_SKU_ID 
+    ? interaction.entitlements.some(e => e.skuId === process.env.PREMIUM_SKU_ID) 
+    : false;
+
   if (sub === "run") {
+    const preset = interaction.options.getString("preset");
+
+    if (preset && !isPremium) {
+      return interaction.reply({
+        ephemeral: true,
+        content: "💎 **Premium Feature**\nOne-click presets are exclusive to premium supporters.\n\nPlease upgrade to use Fast-Track, or run `/setup run` without a preset for the manual interview."
+      });
+    }
+
     // Check cooldowns
     const now = Date.now();
     const serverLast = serverCooldowns.get(interaction.guild.id) || 0;
@@ -112,10 +158,10 @@ export async function handleSetupInteraction(interaction, client) {
     }
     serverCooldowns.set(interaction.guild.id, now);
     userCooldowns.set(interaction.user.id, now);
-    await interaction.reply({ ephemeral: true, content: "Launching interview..." });
+    await interaction.reply({ ephemeral: true, content: preset ? `🚀 Launching **${preset}** quick-setup...` : "Launching interview..." });
     try {
-      await owner.send("Re-running server setup interview.");
-      await runInterview(owner.user, interaction.guild, client);
+      if (!preset) await owner.send("Re-running server setup interview.");
+      await runInterview(owner.user, interaction.guild, client, preset, isPremium);
     } catch (err) {
       log(`Setup run DM failed: ${err.message}`);
       await interaction.followUp({ ephemeral: true, content: "DM failed; running here." });
@@ -127,6 +173,68 @@ export async function handleSetupInteraction(interaction, client) {
     await interaction.followUp({ ephemeral: true, content: "Resetting server channels..." });
     await wipeServer(interaction.guild);
     await interaction.followUp({ ephemeral: true, content: "Server channels wiped." });
+  } else if (sub === "nuke") {
+    const confirmed = await confirmReset(interaction);
+    if (!confirmed) return interaction.followUp({ ephemeral: true, content: "Nuke cancelled." });
+    
+    await interaction.followUp({ ephemeral: true, content: "📦 Creating safety backup before nuke..." });
+    
+    try {
+      const data = await exportGuild(interaction.guild);
+      const backupDir = path.resolve('data', 'backups');
+      if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+      const filePath = path.join(backupDir, `nuke-${interaction.guild.id}-${Date.now()}.json`);
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+      
+      await interaction.user.send({
+        content: `☢️ **Nuke Safety Backup**\nHere is the server state before the nuke command was executed.`,
+        files: [ filePath ]
+      });
+      await interaction.followUp({ ephemeral: true, content: "✅ Backup secured in DMs." });
+    } catch (err) {
+      log(`Nuke backup failed: ${err.message}`);
+      return interaction.followUp({ ephemeral: true, content: `❌ Backup failed (${err.message}). Nuke aborted for safety.` });
+    }
+
+    await interaction.followUp({ ephemeral: true, content: "☢️ **NUKING CHANNELS**..." });
+    await wipeServer(interaction.guild);
+    await interaction.followUp({ ephemeral: true, content: "💀 Nuke complete. Server is clean." });
+  } else if (sub === "restore-backup") {
+    const attachment = interaction.options.getAttachment('file');
+    if (!attachment) return interaction.reply({ ephemeral: true, content: 'Attach a backup JSON file.' });
+    
+    await interaction.reply({ ephemeral: true, content: '⏳ Analyzing backup file...' });
+
+    try {
+      const text = await fetch(attachment.url).then(r => r.text());
+      const json = JSON.parse(text);
+
+      // Compatibility: Convert Array categories (from export) to Object (for blueprint)
+      if (Array.isArray(json.categories)) {
+        const catObj = {};
+        json.categories.forEach(c => {
+          if (c.name) catObj[c.name] = c.channels || [];
+        });
+        json.categories = catObj;
+      }
+
+      const validation = validateBlueprint(json);
+      if (!validation.valid) {
+        return interaction.followUp({ ephemeral: true, content: '❌ Invalid blueprint structure: ' + validation.errors.map(e => `${e.instancePath} ${e.message}`).join('; ') });
+      }
+
+      const bpDir = path.resolve('data', 'blueprints');
+      if (!fs.existsSync(bpDir)) fs.mkdirSync(bpDir, { recursive: true });
+      fs.writeFileSync(path.join(bpDir, `${interaction.guild.id}.json`), JSON.stringify(json, null, 2));
+      saveGuildConfig(interaction.guild.id, { ...loadGuildConfig(interaction.guild.id), lastBlueprint: json, restoredAt: Date.now() });
+
+      await interaction.followUp({ ephemeral: true, content: '✅ Backup verified. Restoring server structure...' });
+      const metrics = await applyBlueprint(interaction.guild, json, interaction.user);
+      await interaction.followUp({ ephemeral: true, content: `🎉 Restore complete.\nChannels: ${metrics.channelCount}\nRoles: ${metrics.roleCount}` });
+    } catch (err) {
+      log(`Restore failed: ${err.message}`);
+      return interaction.followUp({ ephemeral: true, content: `❌ Restore failed: ${err.message}` });
+    }
   } else if (sub === "preview") {
     try {
       const filePath = path.resolve('data', 'blueprints', `${interaction.guild.id}.json`);
@@ -266,6 +374,45 @@ export async function handleSetupInteraction(interaction, client) {
     }
 
     await interaction.followUp({ ephemeral: true, content: results.join('\n') });
+  } else if (sub === 'edit-message') {
+    if (!isPremium) {
+      return interaction.reply({ ephemeral: true, content: "💎 **Premium Feature**\nEditing bot messages is restricted to premium supporters." });
+    }
+
+    const channel = interaction.options.getChannel('channel');
+    const msgId = interaction.options.getString('message_id');
+    const title = interaction.options.getString('title');
+    const body = interaction.options.getString('body');
+
+    if (!channel.isTextBased()) return interaction.reply({ ephemeral: true, content: "Channel must be text-based." });
+    
+    await interaction.reply({ ephemeral: true, content: "Fetching message..." });
+    try {
+      const msg = await channel.messages.fetch(msgId);
+      if (!msg) return interaction.followUp({ ephemeral: true, content: "Message not found." });
+      if (msg.author.id !== client.user.id) return interaction.followUp({ ephemeral: true, content: "I can only edit my own messages." });
+
+      const oldEmbed = msg.embeds[0];
+      const newEmbed = {
+        title: title || oldEmbed?.title,
+        description: body || oldEmbed?.description,
+        color: oldEmbed?.color,
+        footer: oldEmbed?.footer,
+        fields: oldEmbed?.fields,
+        image: oldEmbed?.image,
+        thumbnail: oldEmbed?.thumbnail
+      };
+
+      if (!newEmbed.title && !newEmbed.description) {
+        return interaction.followUp({ ephemeral: true, content: "❌ You must provide a title or body to create/edit an embed." });
+      }
+
+      await msg.edit({ embeds: [newEmbed] });
+      await interaction.followUp({ ephemeral: true, content: "✅ Message updated." });
+    } catch (err) {
+      log(`Edit message failed: ${err.message}`);
+      await interaction.followUp({ ephemeral: true, content: `Failed: ${err.message}` });
+    }
   }
 }
 

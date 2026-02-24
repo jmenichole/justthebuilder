@@ -167,7 +167,55 @@ const SUGGESTION_PACKS = {
   ]
 };
 
-export async function runInterview(user, guild, client) {
+const PRESET_ANSWERS = {
+  gaming: [
+    "A gaming community for players to hang out, find groups, and discuss games.",
+    "neon-gold (vibrant, energetic)",
+    "WELCOME, RULES, ANNOUNCEMENTS, GENERAL CHAT, LFG, VOICE, CLIPS",
+    "yes",
+    "Admin, Moderator, VIP, Member",
+    "staff-chat, mod-logs",
+    "yes"
+  ],
+  crypto: [
+    "A crypto/NFT project server for holders and roadmap updates.",
+    "dark-cyberpunk (edgy, tech)",
+    "OFFICIAL LINKS, ANNOUNCEMENTS, GENERAL, PRICE-TALK, HOLDERS-ONLY",
+    "yes",
+    "Founder, Mod, Holder, Whale, Member",
+    "team-chat, collab-requests",
+    "yes"
+  ],
+  content: [
+    "A community for content creators and fans to share videos and streams.",
+    "streamer-purple (gaming, content)",
+    "WELCOME, ANNOUNCEMENTS, LIVE-NOTIFS, GENERAL, FAN-ART, CLIPS",
+    "yes",
+    "Streamer, Mod, Subscriber, Follower",
+    "mod-chat, planning",
+    "yes"
+  ],
+  professional: [
+    "A professional network for business discussions and networking.",
+    "minimal-clean (simple, professional)",
+    "WELCOME, RESOURCES, NETWORKING, JOBS, GENERAL",
+    "yes",
+    "Admin, Moderator, Professional, Recruiter",
+    "admin-only, reports",
+    "yes"
+  ],
+  support: [
+    "A product support server for helping users with issues.",
+    "pastel-cozy (warm, friendly)",
+    "WELCOME, FAQ, ANNOUNCEMENTS, SUPPORT-TICKETS, GENERAL",
+    "yes",
+    "Admin, Support Agent, Customer",
+    "ticket-logs, staff-area",
+    "yes"
+  ]
+};
+
+export async function runInterview(user, guild, client, preset = null, isPremium = false) {
   const questions = [
     { text: "What is this server about?", suggestions: SUGGESTION_PACKS.serverType },
     { text: "Describe the vibe/style you want.", suggestions: SUGGESTION_PACKS.styles },
@@ -181,6 +229,13 @@ export async function runInterview(user, guild, client) {
   const answers = [];
   const dm = await user.createDM();
   let selectedRuleTemplate = null;
+
+  if (preset && PRESET_ANSWERS[preset]) {
+    answers.push(...PRESET_ANSWERS[preset]);
+    selectedRuleTemplate = preset;
+    await user.send(`⚡ **Fast-Track Activated**: Generating blueprint for **${preset}**...`);
+  } else {
+    // Interactive Loop
   async function ask(questionObj) {
     const { text, suggestions } = questionObj;
     let msg = `📋 **${text}**`;
@@ -234,6 +289,7 @@ export async function runInterview(user, guild, client) {
       // Otherwise leave null for auto-detect
     }
   }
+  }
 
   await user.send("🧠 Generating blueprint with AI...");
 
@@ -270,13 +326,57 @@ export async function runInterview(user, guild, client) {
     return;
   }
 
+  // Enforce Free Tier Limit
+  const FREE_LIMIT = 20;
+  if (!isPremium && blueprint.categories) {
+    let count = 0;
+    let truncated = false;
+    for (const catName in blueprint.categories) {
+      const channels = blueprint.categories[catName];
+      if (Array.isArray(channels)) {
+        if (count >= FREE_LIMIT) {
+          blueprint.categories[catName] = [];
+          truncated = true;
+        } else if (count + channels.length > FREE_LIMIT) {
+          const allowed = FREE_LIMIT - count;
+          blueprint.categories[catName] = channels.slice(0, allowed);
+          count += allowed;
+          truncated = true;
+        } else {
+          count += channels.length;
+        }
+      }
+    }
+    if (truncated) {
+      await user.send(`⚠️ **Free Tier Limit Reached**\nYour blueprint exceeded the ${FREE_LIMIT} channel limit. Some channels were removed. Upgrade to Premium for unlimited channels!`);
+    }
+  }
+
+  // Inject Premium Role if Subscriber
+  if (isPremium && blueprint.roles) {
+    const hasPremiumRole = blueprint.roles.some(r => 
+      r.name.toLowerCase().includes('premium') || 
+      r.name.toLowerCase().includes('vip') || 
+      r.name.toLowerCase().includes('supporter')
+    );
+    
+    if (!hasPremiumRole) {
+      blueprint.roles.push({
+        name: "Premium 💎",
+        color: "#FFD700",
+        permissions: ["ChangeNickname", "AttachFiles", "EmbedLinks", "UseExternalEmojis", "AddReactions"]
+      });
+      await user.send("💎 **Premium Perk**: Added a 'Premium 💎' role to your blueprint!");
+    }
+  }
+
   // Inject rules/about/FAQ if requested
   const wantsInfo = answers[3]?.toLowerCase().includes('yes');
   if (wantsInfo && blueprint.categories) {
     const firstCat = Object.keys(blueprint.categories)[0];
     if (firstCat) {
       const existing = blueprint.categories[firstCat] || [];
-      const hasRules = existing.some(ch => ch.name?.toLowerCase().includes('rule'));
+      let rulesChannel = existing.find(ch => ch.name?.toLowerCase().includes('rule'));
       const hasAbout = existing.some(ch => ch.name?.toLowerCase().includes('about'));
       const hasFaq = existing.some(ch => ch.name?.toLowerCase().includes('faq'));
       
@@ -285,18 +385,24 @@ export async function runInterview(user, guild, client) {
       const ruleTemplate = selectedRuleTemplate ? RULE_TEMPLATES[selectedRuleTemplate] : inferRuleTemplate(answers[0]);
       const faqTemplate = selectedRuleTemplate ? FAQ_TEMPLATES[selectedRuleTemplate] : inferFaqTemplate(answers[0]);
       
-      if (!hasRules) {
-        const rulesBody = ruleTemplate.rules.map((r, i) => `${i + 1}. ${r}`).join('\n') + 
-          '\n\n' + ruleTemplate.footer;
-        existing.unshift({ 
+      let injectedRules = false;
+      if (!rulesChannel) {
+        rulesChannel = { 
           name: 'rules', 
           type: 'text', 
-          permissionsPreset: 'public-readonly',
-          message: { 
-            title: ruleTemplate.title, 
-            body: rulesBody
-          } 
-        });
+          permissionsPreset: 'public-readonly'
+        };
+        existing.unshift(rulesChannel);
+      }
+
+      if (!rulesChannel.message) {
+        const rulesBody = ruleTemplate.rules.map((r, i) => `${i + 1}. ${r}`).join('\n') + 
+          '\n\n' + ruleTemplate.footer;
+        rulesChannel.message = { 
+          title: ruleTemplate.title, 
+          body: rulesBody
+        };
+        injectedRules = true;
       }
       if (!hasAbout) {
         existing.push({ 
@@ -323,7 +429,7 @@ export async function runInterview(user, guild, client) {
       
       // Preview rules/FAQ
       await user.send('📋 **Generated Content Preview:**');
-      if (!hasRules) {
+      if (injectedRules) {
         await user.send(`**${ruleTemplate.title}**\n${ruleTemplate.rules.map((r, i) => `${i + 1}. ${r}`).join('\n')}\n\n${ruleTemplate.footer}`);
       }
       if (!hasFaq) {
@@ -356,4 +462,3 @@ export async function runInterview(user, guild, client) {
     await user.send("❌ An error occurred while building the server. Check bot logs.");
   }
 }
-
