@@ -1,5 +1,5 @@
-# Use Node.js 20 Alpine for a small footprint
-FROM node:20-alpine
+# Use Node.js 22 Alpine for a small footprint
+FROM node:22-alpine
 
 # Enable pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
