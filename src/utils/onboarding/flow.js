@@ -5,6 +5,7 @@ import { sendFreemiumPaywall } from '../commands/setup.js';
 import { canApplyPolish, guildHasPolishApplied, isBotOwner } from '../entitlements.js';
 import { loadGuildConfig } from '../storage/guildConfig.js';
 import { sendProgress } from '../progress.js';
+import { recordFunnelStep } from '../funnel.js';
 import { log } from '../logger.js';
 import fs from 'fs';
 import path from 'path';
@@ -131,7 +132,9 @@ export async function handleOnboardingComponent(interaction, client) {
 
   // START
   if (interaction.customId === 'jtb_start') {
-    state.step = 1; await interaction.reply({ ephemeral: true, content: 'Starting setup…' }); await sendServerTypeSelect(user); return; }
+    state.step = 1;
+    recordFunnelStep(client.guilds.cache.get(state.guildId), 'onboarding_start', { owner: user });
+    await interaction.reply({ ephemeral: true, content: 'Starting setup…' }); await sendServerTypeSelect(user); return; }
   if (interaction.customId === 'jtb_help') { await interaction.reply({ ephemeral: true, content: 'I build roles, channels, embeds, permissions automatically.' }); return; }
   if (interaction.customId === 'jtb_adv') { await interaction.reply({ ephemeral: true, content: 'Advanced options coming soon.' }); return; }
 

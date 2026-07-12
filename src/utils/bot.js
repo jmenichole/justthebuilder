@@ -54,6 +54,9 @@ client.once("clientReady", async () => {
   const { initOps } = await import("./ops.js");
   initOps(client);
 
+  const { startFunnelScanner } = await import("./funnel.js");
+  startFunnelScanner(client);
+
   // Initialize early adopters list on first boot
   const dataDir = path.resolve("data");
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
