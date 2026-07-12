@@ -162,6 +162,7 @@ export async function handleOnboardingComponent(interaction, client) {
       const guild = client.guilds.cache.get(state.guildId);
       persistBlueprintOnly(guild.id, blueprint);
       await sendFreemiumPaywall(user, guild);
+      recordFunnelStep(guild, "interview_completed", { owner: user });
       sessions.delete(userId);
     } catch (err) { log(`Onboarding build failed: ${err.message}`); }
     return; }
