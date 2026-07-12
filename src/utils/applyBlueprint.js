@@ -7,7 +7,7 @@ import { sendProgress } from "./progress.js";
 import { saveTicketConfig } from "./tickets/config.js";
 import { deployTicketPanelForGuild } from "./tickets/handler.js";
 import { loadGuildConfig, saveGuildConfig } from "./storage/guildConfig.js";
-import { postAnalytics } from "./ops.js";
+import { recordFunnelStep } from "./funnel.js";
 import fs from "fs";
 import path from "path";
 
@@ -130,9 +130,12 @@ export async function applyBlueprint(guild, blueprint, { ownerUser, mode = "full
     log(`Guild config patch failed: ${err.message}`);
   }
 
+  // Single-post funnel update: recordFunnelStep owns the analytics embed here
+  // (writes funnel.lastStep + posts) — do not also call postAnalytics for the
+  // same event, or the structure/polish apply would double-post.
   try {
-    postAnalytics({
-      event: mode === "structure" ? "structure_applied" : "polish_applied",
+    recordFunnelStep(guild, mode === "structure" ? "structure_applied" : "polish_applied", {
+      owner: ownerUser,
       title:
         mode === "structure"
           ? "🆓 Free structure applied"
@@ -141,13 +144,12 @@ export async function applyBlueprint(guild, blueprint, { ownerUser, mode = "full
             : "🎉 Full build applied",
       description: `**${guild.name}**`,
       fields: [
-        { name: "Guild ID", value: `\`${guild.id}\``, inline: true },
         { name: "Mode", value: mode, inline: true },
         { name: "Channels", value: String(channelCount), inline: true }
       ]
     });
   } catch (err) {
-    log(`postAnalytics failed: ${err.message}`);
+    log(`recordFunnelStep failed: ${err.message}`);
   }
 
   try {

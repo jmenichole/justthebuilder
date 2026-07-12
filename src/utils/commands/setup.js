@@ -6,6 +6,7 @@ import { loadGuildConfig } from "../storage/guildConfig.js";
 import { canApplyPolish, findUnconsumedBasicPack, guildHasPolishApplied, isBotOwner } from "../entitlements.js";
 import { clearManualPolishGrant, markGrandfatherFullUsed } from "../grandfather.js";
 import { postAnalytics } from "../ops.js";
+import { recordFunnelStep } from "../funnel.js";
 import fs from 'fs';
 import path from 'path';
 import {
@@ -218,6 +219,7 @@ export async function applyStructureForGuild(guild, ownerUser) {
 export async function applyPolishForInteraction(interaction, guild, ownerUser) {
   const access = canApplyPolish(interaction, guild);
   if (!access.allowed) {
+    recordFunnelStep(guild, "unlock_denied", { owner: ownerUser || interaction.user });
     const content = [
       "🔒 **Full setup needs the Basic Build Pack ($0.99).**",
       "Buy it from my bot profile, then press Unlock again or run `/setup unlock`.",
@@ -386,6 +388,10 @@ export async function handleSetupInteraction(interaction, client) {
     }
     serverCooldowns.set(interaction.guild.id, now);
     userCooldowns.set(interaction.user.id, now);
+    recordFunnelStep(interaction.guild, "setup_run_started", {
+      owner: interaction.user,
+      fields: preset ? [{ name: "Preset", value: preset, inline: true }] : []
+    });
     await interaction.reply({
       ephemeral: true,
       content: preset ? `🚀 Launching **${preset}**…` : "Launching free interview…"
@@ -405,6 +411,7 @@ export async function handleSetupInteraction(interaction, client) {
         await interaction.followUp({ ephemeral: true, content: "Interview did not complete." });
         return;
       }
+      recordFunnelStep(interaction.guild, "interview_completed", { owner: owner.user });
       await sendFreemiumPaywall(owner.user, interaction.guild);
     } catch (err) {
       log(`runInterview error: ${err.message}`);
