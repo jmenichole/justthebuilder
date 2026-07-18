@@ -41,10 +41,10 @@ export const SetupCommandData = {
   name: "setup",
   description: "Build or manage your server with JustTheBuilder.",
   options: [
-    { 
-      type: 1, 
-      name: "run", 
-      description: "Run the automated server builder",
+    {
+      type: 1,
+      name: "run",
+      description: "AI interview in DMs — saves your blueprint",
       options: [
         {
           type: 3,
@@ -62,16 +62,10 @@ export const SetupCommandData = {
         }
       ]
     },
-    { type: 1, name: "nuke", description: "☢️ Backup to DM, then delete ALL channels (DANGEROUS)" },
-    {
-      type: 1,
-      name: "unlock",
-      description: "Apply paid polish (roles, embeds, pins, tickets) from your saved interview"
-    },
     {
       type: 1,
       name: "redeem",
-      description: "Redeem a Ko-fi purchase code to your account (usable on any server you own)",
+      description: "Redeem a Ko-fi purchase code (then run unlock)",
       options: [
         {
           type: 3,
@@ -83,8 +77,13 @@ export const SetupCommandData = {
     },
     {
       type: 1,
+      name: "unlock",
+      description: "Apply full polish — roles, embeds, pins & tickets"
+    },
+    {
+      type: 1,
       name: "post-messages",
-      description: "Post rules/about/FAQ embeds into existing channels"
+      description: "Re-post rules/about/FAQ embeds into existing channels"
     },
     {
       type: 1,
@@ -96,22 +95,27 @@ export const SetupCommandData = {
       name: "edit-channel",
       description: "Set channel topic or pin/unpin a message",
       options: [
-        { type: 7, name: 'channel', description: 'The channel to edit', required: true },
-        { type: 3, name: 'topic', description: 'New topic/description for the channel', required: false },
-        { type: 3, name: 'pin-message', description: 'Message ID to pin in the channel', required: false },
-        { type: 3, name: 'unpin-message', description: 'Message ID to unpin from the channel', required: false }
-      ] 
+        { type: 7, name: "channel", description: "The channel to edit", required: true },
+        { type: 3, name: "topic", description: "New topic/description for the channel", required: false },
+        { type: 3, name: "pin-message", description: "Message ID to pin in the channel", required: false },
+        { type: 3, name: "unpin-message", description: "Message ID to unpin from the channel", required: false }
+      ]
     },
     {
       type: 1,
       name: "edit-message",
       description: "Edit a bot message/embed (requires unlock)",
       options: [
-        { type: 7, name: 'channel', description: 'Channel containing the message', required: true },
-        { type: 3, name: 'message_id', description: 'ID of the message to edit', required: true },
-        { type: 3, name: 'title', description: 'New embed title', required: false },
-        { type: 3, name: 'body', description: 'New embed body text', required: false }
+        { type: 7, name: "channel", description: "Channel containing the message", required: true },
+        { type: 3, name: "message_id", description: "ID of the message to edit", required: true },
+        { type: 3, name: "title", description: "New embed title", required: false },
+        { type: 3, name: "body", description: "New embed body text", required: false }
       ]
+    },
+    {
+      type: 1,
+      name: "nuke",
+      description: "☢️ Backup to DM, then delete ALL channels (DANGEROUS)"
     }
   ]
 };
@@ -442,20 +446,24 @@ export async function handleSetupInteraction(interaction, client) {
     // /setup run is free: the interview + free structure never require a pack/sub upfront.
     // Presets are also free — they only fast-track interview answers.
 
-    // Check cooldowns
+    // Check cooldowns (only start the clock after a successful interview)
     const now = Date.now();
     const serverLast = serverCooldowns.get(interaction.guild.id) || 0;
     const userLast = userCooldowns.get(interaction.user.id) || 0;
     if (now - serverLast < SERVER_COOLDOWN_MS && !isOwner) {
-      const wait = (((SERVER_COOLDOWN_MS - (now - serverLast)))/1000).toFixed(0);
-      return interaction.reply({ ephemeral: true, content: `Server cooldown active. Try again in ${wait}s.` });
+      const wait = (((SERVER_COOLDOWN_MS - (now - serverLast))) / 1000).toFixed(0);
+      return interaction.reply({
+        ephemeral: true,
+        content: `Server cooldown active. Try again in ${wait}s.`
+      });
     }
     if (now - userLast < USER_COOLDOWN_MS && !isOwner) {
-      const wait = (((USER_COOLDOWN_MS - (now - userLast)))/1000).toFixed(0);
-      return interaction.reply({ ephemeral: true, content: `Your personal cooldown active. Try again in ${wait}s.` });
+      const wait = ((USER_COOLDOWN_MS - (now - userLast)) / 1000).toFixed(0);
+      return interaction.reply({
+        ephemeral: true,
+        content: `Your personal cooldown active. Try again in ${wait}s.`
+      });
     }
-    serverCooldowns.set(interaction.guild.id, now);
-    userCooldowns.set(interaction.user.id, now);
     await interaction.reply({
       ephemeral: true,
       content: preset ? `🚀 Launching **${preset}**…` : "Launching free interview…"
@@ -466,7 +474,10 @@ export async function handleSetupInteraction(interaction, client) {
           await owner.send("Re-running server setup interview.");
         } catch (dmErr) {
           log(`DM to owner failed: ${dmErr.message}`);
-          await interaction.followUp({ ephemeral: true, content: "⚠️ Could not DM you — please enable DMs from server members and try again." });
+          await interaction.followUp({
+            ephemeral: true,
+            content: "⚠️ Could not DM you — please enable DMs from server members and try again."
+          });
           return;
         }
       }
@@ -475,10 +486,15 @@ export async function handleSetupInteraction(interaction, client) {
         await interaction.followUp({ ephemeral: true, content: "Interview did not complete." });
         return;
       }
+      serverCooldowns.set(interaction.guild.id, Date.now());
+      userCooldowns.set(interaction.user.id, Date.now());
       await sendFreemiumPaywall(owner.user, interaction.guild);
     } catch (err) {
       log(`runInterview error: ${err.message}`);
-      await interaction.followUp({ ephemeral: true, content: `❌ Something went wrong during setup: ${err.message}` });
+      await interaction.followUp({
+        ephemeral: true,
+        content: `❌ Something went wrong during setup: ${err.message}`
+      });
     }
   } else if (sub === "unlock") {
     await deferEphemeral(interaction, "🔓 Checking unlock status…");
@@ -526,7 +542,7 @@ export async function handleSetupInteraction(interaction, client) {
     await wipeServer(interaction.guild);
     try {
       await interaction.user.send(
-        "💀 **Nuke complete.** Run `/setup run preset:justthebuilder` to rebuild your support layout."
+        "💀 **Nuke complete.** Run `/setup run` to rebuild (add `preset:` only if you want a fast-track template)."
       );
     } catch (err) {
       log(`Nuke done but DM failed: ${err.message}`);
