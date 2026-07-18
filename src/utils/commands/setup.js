@@ -3,7 +3,7 @@ import { log } from "../logger.js";
 import { applyBlueprint, loadPersistedBlueprint } from "../applyBlueprint.js";
 import { postMessagesToExistingChannels } from "../builder/messages.js";
 import { loadGuildConfig } from "../storage/guildConfig.js";
-import { canApplyPolish, findUnconsumedBasicPack, fetchUserEntitlements, guildHasPolishApplied, isBotOwner } from "../entitlements.js";
+import { canApplyPolish, fetchUserEntitlements, findUnconsumedBasicPack, guildHasPolishApplied, isBotOwner } from "../entitlements.js";
 import { clearManualPolishGrant, markGrandfatherFullUsed } from "../grandfather.js";
 import { postAnalytics } from "../ops.js";
 import { deferEphemeral, isInteractionTokenError, replyEphemeral } from "../interactionUi.js";

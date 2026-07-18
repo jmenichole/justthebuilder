@@ -8,6 +8,7 @@ import { buildDiscordBasicPackPurchaseDm } from "../config/help.js";
 import { SetupCommandData, handleSetupInteraction, handleFreemiumButtons } from "./commands/setup.js";
 import { handleOnboardingComponent, handlePostBuildButtons } from "./onboarding/flow.js";
 import { log } from "./logger.js";
+import { skuIdsMatch } from "./entitlements.js";
 import { isInteractionTokenError } from "./interactionUi.js";
 
 // Try multiple env locations (root .env first, then src/config/.env)
@@ -187,9 +188,9 @@ client.on("entitlementCreate", async (entitlement) => {
   const supportLink = process.env.SUPPORT_SERVER_INVITE || "https://discord.gg/NEePze3rZd";
 
   let message = "";
-  if (entitlement.skuId === basicPackId) {
+  if (skuIdsMatch(entitlement.skuId, basicPackId)) {
     message = buildDiscordBasicPackPurchaseDm(supportLink);
-  } else if (entitlement.skuId === subId) {
+  } else if (skuIdsMatch(entitlement.skuId, subId)) {
     message = [
       "🎉 **Thanks for your purchase!**",
       "",
