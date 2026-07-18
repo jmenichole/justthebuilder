@@ -46,6 +46,33 @@ const grantCommandBuilder = new SlashCommandBuilder()
         opt.setName("user").setDescription("User to revoke").setRequired(true)
       )
   )
+  .addSubcommandGroup((group) =>
+    group
+      .setName("kofi")
+      .setDescription("Ko-fi shop & API (requires KOFI_API_KEY on server)")
+      .addSubcommand((sub) =>
+        sub.setName("shop-list").setDescription("List Ko-fi shop items via API")
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("shop-sync")
+          .setDescription("Sync shop catalog to data/kofi/shop-catalog.json")
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("shop-create")
+          .setDescription("Create a Ko-fi shop item via API")
+          .addStringOption((opt) =>
+            opt.setName("name").setDescription("Product name").setRequired(true)
+          )
+          .addNumberOption((opt) =>
+            opt.setName("price").setDescription("Price in USD").setRequired(true)
+          )
+          .addStringOption((opt) =>
+            opt.setName("description").setDescription("Product description").setRequired(false)
+          )
+      )
+  )
   ;
 
 export const GrantCommandData = asOwnerUserCommand(grantCommandBuilder.toJSON());
@@ -122,8 +149,58 @@ export async function handleGrantInteraction(interaction, client) {
     });
   }
 
+  const group = interaction.options.getSubcommandGroup(false);
   const sub = interaction.options.getSubcommand();
   const notify = interaction.options.getBoolean("notify") ?? true;
+
+  if (group === "kofi") {
+    const { listShopItems, createShopItem, syncShopCatalog } = await import("./kofi/api.js");
+    await interaction.deferReply({ ephemeral: true });
+    try {
+      if (sub === "shop-list") {
+        const { items } = await listShopItems();
+        if (!items.length) {
+          return interaction.editReply({ content: "No shop items returned from Ko-fi API." });
+        }
+        const lines = items.map((item) => {
+          const code = item.direct_link_code || item.directLinkCode || item.code || "?";
+          const name = item.name || item.title || "Unnamed";
+          const price = item.price ?? item.unit_price ?? "?";
+          return `• **${name}** — $${price} — \`${code}\``;
+        });
+        return interaction.editReply({
+          content: ["**Ko-fi shop items**", ...lines].join("\n")
+        });
+      }
+      if (sub === "shop-sync") {
+        const items = await syncShopCatalog();
+        return interaction.editReply({
+          content: `✅ Synced **${items.length}** shop item(s) to \`data/kofi/shop-catalog.json\`.`
+        });
+      }
+      if (sub === "shop-create") {
+        const name = interaction.options.getString("name", true);
+        const price = interaction.options.getNumber("price", true);
+        const description = interaction.options.getString("description") || "";
+        const created = await createShopItem({ name, price, description });
+        return interaction.editReply({
+          content: [
+            `✅ **Shop item created:** ${name} ($${price})`,
+            "Run `/grant kofi shop-sync` then set `KOFI_SHOP_ITEM_CODE` on Fly if needed.",
+            "```json",
+            JSON.stringify(created, null, 2).slice(0, 1500),
+            "```"
+          ].join("\n")
+        });
+      }
+    } catch (err) {
+      log(`grant kofi failed: ${err.message}`);
+      return interaction.editReply({
+        content: `❌ Ko-fi API error: ${err.message}\n_Set KOFI_API_KEY on Fly. Create may be unsupported — use Ko-fi dashboard if needed._`
+      });
+    }
+    return;
+  }
 
   if (sub === "free-build") {
     const guildId = interaction.options.getString("guild_id").trim();
