@@ -1,3 +1,4 @@
+import { buildKofiPurchaseDm } from "../../config/help.js";
 import { log } from "../logger.js";
 import { createCodeForOrder } from "./store.js";
 import { allowedShopCodes } from "./api.js";
@@ -103,24 +104,8 @@ export async function handleKofiPayload(payload, client) {
     try {
       const user = await client.users.fetch(discordUserId);
       const thanksUrl = publicThanksUrl(entry.code);
-      const packLabel =
-        polishCredits > 1
-          ? `Creator Pack — **${polishCredits} unlock credits**`
-          : "Basic Build Pack — **1 unlock credit**";
       await user.send(
-        [
-          "🎉 **Thanks for your Ko-fi purchase!**",
-          "",
-          packLabel,
-          `Your redeem code: \`${entry.code}\``,
-          "",
-          "In a server **you own**:",
-          "1. Run `/setup run` if you haven't finished the interview",
-          `2. Run \`/setup redeem code:${entry.code}\``,
-          "3. Run `/setup unlock` to apply full polish",
-          "",
-          `More help: ${thanksUrl}`
-        ].join("\n")
+        buildKofiPurchaseDm({ code: entry.code, thanksUrl, polishCredits })
       );
       log(`[kofi] DM sent redeem code to ${discordUserId}`);
     } catch (err) {

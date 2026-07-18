@@ -1,4 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
+import { runInterview } from '../ai/interviewFlow.js';
+import { sendFreemiumPaywall } from '../commands/setup.js';
+import { buildHelpMessage, buildInstallHelpHint } from '../../config/help.js';
 import { buildPreviewBlueprint } from './preview.js';
 import { applyBlueprint, loadPersistedBlueprint, persistBlueprintOnly } from '../applyBlueprint.js';
 import { canApplyPolish, guildHasPolishApplied, isBotOwner } from '../entitlements.js';
@@ -47,7 +50,9 @@ export async function startOnboarding(user, guild, client) {
       `_${TAGLINE}_`,
       '',
       'Tap **Start Setup** for the AI interview in DMs, or run **`/setup run`** in your server.',
-      'Free: layout skeleton. $0.99: roles, embeds, pins & tickets.'
+      'Free: layout skeleton. $0.99: roles, embeds, pins & tickets.',
+      '',
+      buildInstallHelpHint()
     ].join('\n'),
     components: [row]
   });
@@ -154,17 +159,7 @@ export async function handleOnboardingComponent(interaction, client) {
     return;
   }
   if (interaction.customId === 'jtb_help') {
-    await interaction.reply({
-      ephemeral: true,
-      content: [
-        `_${TAGLINE}_`,
-        '',
-        '✅ **Free:** AI interview + category & channel layout',
-        '🔒 **$0.99:** roles, permissions, embeds, pins & tickets',
-        '',
-        'Run **`/setup run`** in your server to start.'
-      ].join('\n')
-    });
+    await interaction.reply({ ephemeral: true, content: buildHelpMessage() });
     return;
   }
   if (interaction.customId === 'jtb_adv') { await interaction.reply({ ephemeral: true, content: 'Advanced options coming soon.' }); return; }

@@ -7,6 +7,7 @@ import { canApplyPolish, findUnconsumedBasicPack, fetchUserEntitlements, guildHa
 import { clearManualPolishGrant, markGrandfatherFullUsed } from "../grandfather.js";
 import { postAnalytics } from "../ops.js";
 import { deferEphemeral, isInteractionTokenError, replyEphemeral } from "../interactionUi.js";
+import { buildUnlockDeniedMessage } from "../../config/help.js";
 import { KOFI_BASIC_SHOP_URL, TAGLINE } from "../../config/marketing.js";
 import { consumePolishCredit } from "../userCredits.js";
 import fs from 'fs';
@@ -194,7 +195,9 @@ export async function sendFreemiumPaywall(user, guild) {
         "🔒 **$0.99:** roles, permissions, embeds, pins & tickets — launch-ready",
         "",
         `[Buy on Ko-fi](${KOFI_BASIC_SHOP_URL}) or bot profile → \`/setup redeem\` → \`/setup unlock\``,
-        "Your answers are saved — no re-interview needed."
+        "Your answers are saved — no re-interview needed.",
+        "",
+        "Run **`/help`** in your server for the full command guide."
       ].join("\n")
     );
   const row = new ActionRowBuilder().addComponents(
@@ -256,14 +259,7 @@ export async function applyPolishForInteraction(interaction, guild, ownerUser) {
     });
     return {
       ok: false,
-      message: [
-        "🔒 **Launch-ready setup needs an unlock ($0.99).**",
-        `• [Basic — $0.99](${KOFI_BASIC_SHOP_URL}) → \`/setup redeem\` → \`/setup unlock\``,
-        "• Or buy from the bot profile → `/setup unlock`",
-        "",
-        `_${TAGLINE}_`,
-        "Your interview is saved — no re-interview needed."
-      ].join("\n")
+      message: buildUnlockDeniedMessage()
     };
   }
 

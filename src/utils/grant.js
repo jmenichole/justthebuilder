@@ -1,8 +1,12 @@
 // Owner-only: registered as User Install (see ownerCommands.js). Handler checks BOT_OWNER_ID.
 import { SlashCommandBuilder, REST, Routes } from "discord.js";
+import { buildGrantFreeBuildOwnerDm } from "../config/help.js";
 import { asOwnerUserCommand } from "./commands/ownerCommands.js";
 import { log } from "./logger.js";
+import { loadPersistedBlueprint } from "./applyBlueprint.js";
+import { guildHasPolishApplied } from "./entitlements.js";
 import { grantManualPolishGrant } from "./grandfather.js";
+import { loadGuildConfig } from "./storage/guildConfig.js";
 
 const grantCommandBuilder = new SlashCommandBuilder()
   .setName("grant")
@@ -239,12 +243,22 @@ export async function handleGrantInteraction(interaction, client) {
 
     grantManualPolishGrant(guildId);
     const guild = await client.guilds.fetch(guildId).catch(() => null);
+    const hasBlueprint = Boolean(loadPersistedBlueprint(guildId));
+    const cfg = loadGuildConfig(guildId);
+    const structureApplied = Boolean(cfg.structureAppliedAt);
+    const polishApplied = guildHasPolishApplied(guildId);
+
+    const ownerNextSteps = polishApplied
+      ? "Server already unlocked — owner can refresh with `/setup post-messages` or `/setup ticket-panel`."
+      : hasBlueprint
+        ? "Owner should run **`/setup unlock`** in that server (interview is saved)."
+        : "Owner should run **`/setup run`** then **`/setup unlock`** in that server.";
 
     if (!guild) {
       return interaction.editReply({
         content: [
           `✅ **Free build granted** for server \`${guildId}\`.`,
-          "Owner can run `/setup run` once after the bot is invited.",
+          ownerNextSteps,
           notify
             ? "\n⚠️ Could not notify — bot is not in that server (no owner DM)."
             : ""
@@ -257,18 +271,12 @@ export async function handleGrantInteraction(interaction, client) {
       try {
         const owner = await guild.fetchOwner();
         await owner.send(
-          [
-            "🎁 **You've been granted a free server build** on **JustTheBuilder**.",
-            "",
-            `Server: **${guild.name}**`,
-            "",
-            "As server owner, run:",
-            "`/setup run`",
-            "",
-            "You'll get a DM interview, then a full AI build (channels, roles, rules, FAQ, embeds).",
-            "",
-            `Questions? ${supportLink()}`
-          ].join("\n")
+          buildGrantFreeBuildOwnerDm({
+            guildName: guild.name,
+            hasBlueprint,
+            structureApplied,
+            polishApplied
+          })
         );
         notifyResult = `\n📬 DM sent to **${owner.user.tag}**.`;
       } catch (err) {
@@ -280,7 +288,7 @@ export async function handleGrantInteraction(interaction, client) {
     return interaction.editReply({
       content: [
         `✅ **Free build granted** for **${guild.name}** (\`${guildId}\`).`,
-        "They can run `/setup run` once (owner only).",
+        ownerNextSteps,
         notifyResult
       ].join("\n")
     });
