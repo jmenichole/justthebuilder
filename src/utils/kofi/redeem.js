@@ -1,9 +1,9 @@
-import { grantManualPolishGrant } from "../grandfather.js";
 import { findCodeEntry, markCodeRedeemed } from "./store.js";
 import { postAnalytics } from "../ops.js";
+import { addPolishCredits, getPolishCredits } from "../userCredits.js";
 
 /**
- * Redeem a Ko-fi unlock code for the current guild (owner only).
+ * Redeem a Ko-fi unlock code — adds polish credits to the redeemer's account.
  * @param {import('discord.js').ChatInputCommandInteraction} interaction
  * @returns {Promise<{ ok: boolean, message: string }>}
  */
@@ -20,20 +20,18 @@ export async function redeemKofiCode(interaction) {
   }
 
   if (entry.status === "redeemed") {
-    if (entry.redeemedGuildId === interaction.guild.id) {
-      return {
-        ok: true,
-        message:
-          "✅ This code was already redeemed on **this server**. Run `/setup unlock` to apply polish (after `/setup run` if needed)."
-      };
-    }
+    const credits = getPolishCredits(interaction.user.id);
     return {
-      ok: false,
-      message: "❌ This code was already used on another server. Each purchase unlocks **one** server."
+      ok: true,
+      message:
+        credits > 0
+          ? `✅ This code was already redeemed. You have **${credits}** unlock credit(s) left — run \`/setup unlock\` in a server you own.`
+          : "❌ This code was already used and you have no credits left from it."
     };
   }
 
-  grantManualPolishGrant(interaction.guild.id);
+  const credits = entry.polishCredits || 1;
+  const total = addPolishCredits(interaction.user.id, credits);
   markCodeRedeemed(entry.code, {
     userId: interaction.user.id,
     guildId: interaction.guild.id
@@ -42,24 +40,25 @@ export async function redeemKofiCode(interaction) {
   postAnalytics({
     event: "kofi_redeemed",
     title: "☕ Ko-fi code redeemed",
-    description: `**${interaction.guild.name}**`,
+    description: `**${interaction.guild.name}** — +${credits} credit(s)`,
     fields: [
       { name: "Guild", value: `\`${interaction.guild.id}\``, inline: true },
       { name: "User", value: `<@${interaction.user.id}>`, inline: true },
-      { name: "Code", value: `\`${entry.code}\``, inline: true }
+      { name: "Credits", value: String(credits), inline: true }
     ]
   });
 
   return {
     ok: true,
     message: [
-      "✅ **Ko-fi unlock redeemed for this server!**",
+      `✅ **Redeemed — ${credits} unlock credit${credits === 1 ? "" : "s"} added!**`,
+      `You now have **${total}** credit(s) total.`,
       "",
-      "Next steps:",
-      "1. Run `/setup run` if you haven't finished the interview yet",
+      "Next steps in **this server** (or any server you own):",
+      "1. Run `/setup run` if you haven't finished the interview",
       "2. Run `/setup unlock` to apply roles, embeds, pins & tickets",
       "",
-      "_This code is now tied to this server only._"
+      "_Free: AI designs your server. $0.99: we build it._"
     ].join("\n")
   };
 }

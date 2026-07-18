@@ -4,6 +4,7 @@
 
 import { hasGrandfatherFullLeft } from "./grandfather.js";
 import { loadGuildConfig } from "./storage/guildConfig.js";
+import { getPolishCredits } from "./userCredits.js";
 
 export function isBotOwner(userId) {
   const ownerId = process.env.BOT_OWNER_ID;
@@ -61,12 +62,15 @@ export function findUnconsumedBasicPack(entitlements) {
 }
 
 /**
- * @returns {{ allowed: boolean, reason: 'owner'|'pack'|'manual_grant'|'grandfather'|'denied' }}
+ * @returns {{ allowed: boolean, reason: 'owner'|'pack'|'credit'|'manual_grant'|'grandfather'|'denied' }}
  */
 export function canApplyPolish(interaction, guild) {
   if (isBotOwner(interaction.user.id)) return { allowed: true, reason: "owner" };
   if (findUnconsumedBasicPack(interaction.entitlements)) {
     return { allowed: true, reason: "pack" };
+  }
+  if (getPolishCredits(interaction.user.id) > 0) {
+    return { allowed: true, reason: "credit" };
   }
   if (guild) {
     const cfg = loadGuildConfig(guild.id);

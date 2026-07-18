@@ -8,6 +8,7 @@ import { saveTicketConfig } from "./tickets/config.js";
 import { deployTicketPanelForGuild } from "./tickets/handler.js";
 import { loadGuildConfig, saveGuildConfig } from "./storage/guildConfig.js";
 import { postAnalytics } from "./ops.js";
+import { STRUCTURE_UPSELL } from "../config/marketing.js";
 import fs from "fs";
 import path from "path";
 
@@ -161,7 +162,7 @@ export async function applyBlueprint(guild, blueprint, { ownerUser, mode = "full
     if (mode === "structure") {
       await sendProgress(
         ownerUser,
-        `🎉 Your free structure is ready!\n⏱️ Build time: ${buildSeconds} seconds\n📁 Categories: ${categoryCount}\n📄 Channels: ${channelCount}\n\n✨ Want roles, topics, permissions, embeds, pins & tickets on top of this? Run **/setup unlock** to polish your server for just **$0.99**.`
+        `⏱️ ${buildSeconds}s · 📁 ${categoryCount} categories · 📄 ${channelCount} channels\n\n${STRUCTURE_UPSELL}`
       );
     } else {
       const embedNote =

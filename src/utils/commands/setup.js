@@ -7,6 +7,8 @@ import { canApplyPolish, findUnconsumedBasicPack, guildHasPolishApplied, isBotOw
 import { clearManualPolishGrant, markGrandfatherFullUsed } from "../grandfather.js";
 import { postAnalytics } from "../ops.js";
 import { deferEphemeral, isInteractionTokenError, replyEphemeral } from "../interactionUi.js";
+import { KOFI_BASIC_SHOP_URL, TAGLINE } from "../config/marketing.js";
+import { consumePolishCredit } from "../userCredits.js";
 import fs from 'fs';
 import path from 'path';
 import {
@@ -186,11 +188,13 @@ export async function sendFreemiumPaywall(user, guild) {
     .setTitle("Interview complete — choose how to build")
     .setDescription(
       [
-        "✅ **Free now:** categories + channel names (empty channels)",
-        "🔒 **$0.99 unlock:** roles, permissions, topics, embeds, pins, tickets",
+        `_${TAGLINE}_`,
         "",
-        "Buy on [Ko-fi](https://ko-fi.com/s/2c6f47f1fc) or from the bot profile, then `/setup redeem` + `/setup unlock`.",
-        "Your answers are saved. Unlock later with `/setup unlock` after purchase."
+        "✅ **Free:** AI interview + category & channel layout (skeleton)",
+        "🔒 **$0.99:** roles, permissions, embeds, pins & tickets — launch-ready",
+        "",
+        `[Buy on Ko-fi](${KOFI_BASIC_SHOP_URL}) or bot profile → \`/setup redeem\` → \`/setup unlock\``,
+        "Your answers are saved — no re-interview needed."
       ].join("\n")
     );
   const row = new ActionRowBuilder().addComponents(
@@ -253,11 +257,12 @@ export async function applyPolishForInteraction(interaction, guild, ownerUser) {
     return {
       ok: false,
       message: [
-        "🔒 **Full setup needs a Basic Build Pack ($0.99).**",
-        "• [Buy on Ko-fi](https://ko-fi.com/s/2c6f47f1fc) → `/setup redeem` → `/setup unlock`",
+        "🔒 **Launch-ready setup needs an unlock ($0.99).**",
+        `• [Basic — $0.99](${KOFI_BASIC_SHOP_URL}) → \`/setup redeem\` → \`/setup unlock\``,
         "• Or buy from the bot profile → `/setup unlock`",
         "",
-        "Your interview answers are saved — no re-interview needed."
+        `_${TAGLINE}_`,
+        "Your interview is saved — no re-interview needed."
       ].join("\n")
     };
   }
@@ -294,10 +299,22 @@ export async function applyPolishForInteraction(interaction, guild, ownerUser) {
       fields: [{ name: "Guild", value: `\`${guild.id}\``, inline: true }]
     });
   }
+  if (access.reason === "credit") {
+    const remaining = consumePolishCredit(interaction.user.id);
+    postAnalytics({
+      event: "credit_consumed",
+      title: "Unlock credit consumed",
+      fields: [
+        { name: "Guild", value: `\`${guild.id}\``, inline: true },
+        { name: "User", value: `<@${interaction.user.id}>`, inline: true },
+        { name: "Credits left", value: String(remaining), inline: true }
+      ]
+    });
+  }
 
   return {
     ok: true,
-    message: "✅ Unlock complete — polish applied! Check your DMs for details."
+    message: "✅ **Launch-ready!** Roles, embeds, pins & tickets applied. Check your DMs for details."
   };
 }
 
