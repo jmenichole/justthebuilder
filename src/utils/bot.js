@@ -113,7 +113,7 @@ client.on("interactionCreate", async (i) => {
     const { handleAnnounceInteraction } = await import("./announce.js");
     const { handleGrantInteraction } = await import("./grant.js");
     await handleSetupInteraction(i, client);
-    handleOnboardingComponent(i, client);
+    await handleOnboardingComponent(i, client);
     handlePostBuildButtons(i, client);
     await handleAnnounceInteraction(i, client);
     await handleGrantInteraction(i, client);

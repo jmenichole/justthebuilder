@@ -27,11 +27,11 @@ describe("userCredits", () => {
 });
 
 describe("canApplyPolish credits", () => {
-  it("allows unlock when user has credits", () => {
+  it("allows unlock when user has credits", async () => {
     const userId = "credit-user-2";
     tracked.push(userId);
     addPolishCredits(userId, 1);
-    const result = canApplyPolish({ user: { id: userId }, entitlements: [] }, { id: "g1" });
+    const result = await canApplyPolish({ user: { id: userId }, entitlements: [] }, { id: "g1" });
     assert.deepEqual(result, { allowed: true, reason: "credit" });
   });
 });

@@ -5,10 +5,23 @@
 import { hasGrandfatherFullLeft } from "./grandfather.js";
 import { loadGuildConfig } from "./storage/guildConfig.js";
 import { getPolishCredits } from "./userCredits.js";
+import { log } from "./logger.js";
 
 export function isBotOwner(userId) {
   const ownerId = process.env.BOT_OWNER_ID;
   return Boolean(ownerId && userId === ownerId);
+}
+
+function entitlementsToList(entitlements) {
+  if (!entitlements) return [];
+  return typeof entitlements.values === "function"
+    ? [...entitlements.values()]
+    : [...entitlements];
+}
+
+/** Compare Discord SKU snowflakes regardless of string/number typing. */
+export function skuIdsMatch(a, b) {
+  return a != null && b != null && String(a) === String(b);
 }
 
 /**
@@ -22,11 +35,8 @@ export async function userHasProSubscription(client, userId, interactionEntitlem
   if (!subSkuId) return false;
 
   if (interactionEntitlements) {
-    const list =
-      typeof interactionEntitlements.values === "function"
-        ? [...interactionEntitlements.values()]
-        : [...interactionEntitlements];
-    if (list.some((e) => e.skuId === subSkuId && !e.consumed)) return true;
+    const list = entitlementsToList(interactionEntitlements);
+    if (list.some((e) => skuIdsMatch(e.skuId, subSkuId) && !e.consumed)) return true;
   }
 
   try {
@@ -34,7 +44,7 @@ export async function userHasProSubscription(client, userId, interactionEntitlem
       userId,
       excludeEnded: true
     });
-    return ents.some((e) => e.skuId === subSkuId);
+    return ents.some((e) => skuIdsMatch(e.skuId, subSkuId));
   } catch {
     return false;
   }
@@ -54,24 +64,59 @@ export async function canOpenSupportTicket(client, userId, interactionEntitlemen
 export function findUnconsumedBasicPack(entitlements) {
   const sku = process.env.PREMIUM_SKU_ID;
   if (!sku || !entitlements) return null;
-  const list =
-    typeof entitlements.values === "function"
-      ? [...entitlements.values()]
-      : [...entitlements];
-  return list.find((e) => e.skuId === sku && !e.consumed) || null;
+  const list = entitlementsToList(entitlements);
+  return list.find((e) => skuIdsMatch(e.skuId, sku) && !e.consumed) || null;
 }
 
 /**
- * @returns {{ allowed: boolean, reason: 'owner'|'pack'|'credit'|'manual_grant'|'grandfather'|'denied' }}
+ * Merge interaction entitlements with a live API fetch.
+ * DM button clicks often omit interaction.entitlements even after purchase.
+ * @param {import('discord.js').Client} client
+ * @param {string} userId
+ * @param {import('discord.js').Collection|Array} [interactionEntitlements]
  */
-export function canApplyPolish(interaction, guild) {
-  if (isBotOwner(interaction.user.id)) return { allowed: true, reason: "owner" };
-  if (findUnconsumedBasicPack(interaction.entitlements)) {
-    return { allowed: true, reason: "pack" };
+export async function fetchUserEntitlements(client, userId, interactionEntitlements) {
+  const fromInteraction = entitlementsToList(interactionEntitlements);
+  if (findUnconsumedBasicPack(fromInteraction)) return fromInteraction;
+  if (!client?.application?.entitlements?.fetch) return fromInteraction;
+
+  try {
+    const fetched = await client.application.entitlements.fetch({
+      userId,
+      excludeEnded: true
+    });
+    const merged = new Map();
+    for (const e of fromInteraction) {
+      if (e?.id != null) merged.set(String(e.id), e);
+    }
+    for (const e of fetched.values()) {
+      merged.set(String(e.id), e);
+    }
+    return [...merged.values()];
+  } catch (err) {
+    log(`fetchUserEntitlements failed for ${userId}: ${err.message}`);
+    return fromInteraction;
   }
+}
+
+/**
+ * @returns {Promise<{ allowed: boolean, reason: 'owner'|'pack'|'credit'|'manual_grant'|'grandfather'|'denied', packEntitlement?: object }>}
+ */
+export async function canApplyPolish(interaction, guild) {
+  if (isBotOwner(interaction.user.id)) return { allowed: true, reason: "owner" };
+
   if (getPolishCredits(interaction.user.id) > 0) {
     return { allowed: true, reason: "credit" };
   }
+
+  const entitlements = await fetchUserEntitlements(
+    interaction.client,
+    interaction.user.id,
+    interaction.entitlements
+  );
+  const pack = findUnconsumedBasicPack(entitlements);
+  if (pack) return { allowed: true, reason: "pack", packEntitlement: pack };
+
   if (guild) {
     const cfg = loadGuildConfig(guild.id);
     if (cfg.manualPolishGrant === true) {

@@ -20,13 +20,19 @@ export async function redeemKofiCode(interaction) {
   }
 
   if (entry.status === "redeemed") {
-    const credits = getPolishCredits(interaction.user.id);
+    if (entry.redeemedByUserId === interaction.user.id) {
+      const credits = getPolishCredits(interaction.user.id);
+      return {
+        ok: true,
+        message:
+          credits > 0
+            ? `✅ You already redeemed this code. You have **${credits}** unlock credit(s) — run \`/setup unlock\` in a server you own.`
+            : "❌ You already used this code and have no credits left from it."
+      };
+    }
     return {
-      ok: true,
-      message:
-        credits > 0
-          ? `✅ This code was already redeemed. You have **${credits}** unlock credit(s) left — run \`/setup unlock\` in a server you own.`
-          : "❌ This code was already used and you have no credits left from it."
+      ok: false,
+      message: "❌ This code was already redeemed by another account."
     };
   }
 
