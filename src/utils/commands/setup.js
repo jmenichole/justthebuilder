@@ -6,6 +6,7 @@ import { loadGuildConfig } from "../storage/guildConfig.js";
 import { canApplyPolish, findUnconsumedBasicPack, guildHasPolishApplied, isBotOwner } from "../entitlements.js";
 import { clearManualPolishGrant, markGrandfatherFullUsed } from "../grandfather.js";
 import { postAnalytics } from "../ops.js";
+import { deferEphemeral, isInteractionTokenError, replyEphemeral } from "../interactionUi.js";
 import fs from 'fs';
 import path from 'path';
 import {
@@ -223,25 +224,42 @@ export async function applyStructureForGuild(guild, ownerUser) {
 
 /**
  * Apply paid polish/full build from the guild's saved interview blueprint, gated by entitlement.
- * Handles its own denial reply/followUp on the interaction when access is not allowed.
  * @param {import('discord.js').Interaction} interaction
  * @param {import('discord.js').Guild} guild
  * @param {import('discord.js').User} ownerUser
- * @returns {Promise<boolean>} true if polish/full was applied
+ * @returns {Promise<{ ok: boolean, message: string }>}
  */
 export async function applyPolishForInteraction(interaction, guild, ownerUser) {
+  if (guildHasPolishApplied(guild.id)) {
+    return {
+      ok: true,
+      message:
+        "✅ This server already has the full unlock applied.\nUse `/setup post-messages` or `/setup ticket-panel` if you need to refresh embeds or tickets."
+    };
+  }
+
   const access = canApplyPolish(interaction, guild);
   if (!access.allowed) {
-    const content = [
-      "🔒 **Full setup needs a Basic Build Pack ($0.99).**",
-      "• [Buy on Ko-fi](https://ko-fi.com/s/2c6f47f1fc) → `/setup redeem` → `/setup unlock`",
-      "• Or buy from the bot profile → `/setup unlock`",
-      "",
-      "Your interview answers are saved — no re-interview needed."
-    ].join("\n");
-    if (interaction.replied || interaction.deferred) await interaction.followUp({ ephemeral: true, content });
-    else await interaction.reply({ ephemeral: true, content });
-    return false;
+    postAnalytics({
+      event: "upgrade_denied",
+      title: "🔒 Unlock denied",
+      description: `**${guild.name}** — no pack, grant, or grandfather entitlement`,
+      fields: [
+        { name: "Guild", value: `\`${guild.id}\``, inline: true },
+        { name: "User", value: `<@${interaction.user.id}>`, inline: true },
+        { name: "Source", value: interaction.isButton() ? "DM button" : "slash command", inline: true }
+      ]
+    });
+    return {
+      ok: false,
+      message: [
+        "🔒 **Full setup needs a Basic Build Pack ($0.99).**",
+        "• [Buy on Ko-fi](https://ko-fi.com/s/2c6f47f1fc) → `/setup redeem` → `/setup unlock`",
+        "• Or buy from the bot profile → `/setup unlock`",
+        "",
+        "Your interview answers are saved — no re-interview needed."
+      ].join("\n")
+    };
   }
 
   const blueprint = loadPersistedBlueprint(guild.id);
@@ -277,7 +295,10 @@ export async function applyPolishForInteraction(interaction, guild, ownerUser) {
     });
   }
 
-  return true;
+  return {
+    ok: true,
+    message: "✅ Unlock complete — polish applied! Check your DMs for details."
+  };
 }
 
 /**
@@ -330,27 +351,29 @@ export async function handleFreemiumButtons(interaction, client) {
   }
 
   if (action === "structure") {
-    await interaction.reply({ ephemeral: true, content: "🏗️ Applying your free structure…" }).catch(() => {});
+    await deferEphemeral(interaction, "🏗️ Applying your free structure…");
     try {
       await applyStructureForGuild(guild, owner.user);
-      await interaction.followUp({ ephemeral: true, content: "✅ Free structure applied! Check your server." }).catch(() => {});
+      await replyEphemeral(interaction, "✅ Free structure applied! Check your server.");
     } catch (err) {
       log(`Apply structure button failed: ${err.message}`);
-      await interaction.followUp({ ephemeral: true, content: `❌ Failed: ${err.message}` }).catch(() => {});
+      if (!isInteractionTokenError(err)) {
+        await replyEphemeral(interaction, `❌ Failed: ${err.message}`).catch(() => {});
+      }
     }
     return true;
   }
 
-  // polish unlock
-  await interaction.reply({ ephemeral: true, content: "🔓 Checking unlock status…" }).catch(() => {});
+  // polish unlock — defer before long applyBlueprint to keep webhook token valid
+  await deferEphemeral(interaction, "🔓 Checking unlock status…");
   try {
-    const ok = await applyPolishForInteraction(interaction, guild, owner.user);
-    if (ok) {
-      await interaction.followUp({ ephemeral: true, content: "✅ Unlock complete — polish applied!" }).catch(() => {});
-    }
+    const result = await applyPolishForInteraction(interaction, guild, owner.user);
+    await replyEphemeral(interaction, result.message);
   } catch (err) {
     log(`Unlock button failed: ${err.message}`);
-    await interaction.followUp({ ephemeral: true, content: `❌ Failed: ${err.message}` }).catch(() => {});
+    if (!isInteractionTokenError(err)) {
+      await replyEphemeral(interaction, `❌ Failed: ${err.message}`).catch(() => {});
+    }
   }
   return true;
 }
@@ -427,15 +450,15 @@ export async function handleSetupInteraction(interaction, client) {
       await interaction.followUp({ ephemeral: true, content: `❌ Something went wrong during setup: ${err.message}` });
     }
   } else if (sub === "unlock") {
-    await interaction.reply({ ephemeral: true, content: "🔓 Checking unlock status…" });
+    await deferEphemeral(interaction, "🔓 Checking unlock status…");
     try {
-      const ok = await applyPolishForInteraction(interaction, interaction.guild, owner.user);
-      if (ok) {
-        await interaction.followUp({ ephemeral: true, content: "✅ Unlock complete — polish applied! Check your DMs for details." });
-      }
+      const result = await applyPolishForInteraction(interaction, interaction.guild, owner.user);
+      await replyEphemeral(interaction, result.message);
     } catch (err) {
       log(`unlock failed: ${err.message}`);
-      await interaction.followUp({ ephemeral: true, content: `❌ Unlock failed: ${err.message}` });
+      if (!isInteractionTokenError(err)) {
+        await replyEphemeral(interaction, `❌ Unlock failed: ${err.message}`).catch(() => {});
+      }
     }
   } else if (sub === "redeem") {
     const { redeemKofiCode } = await import("../kofi/redeem.js");
