@@ -32,6 +32,8 @@ Or in Discord (bot owner, user-install `/grant`):
 
 If API create fails, add the product manually at [ko-fi.com/manage/shop](https://ko-fi.com/manage/shop) with the same name/price, then set the `direct_link_code` from the shop URL (`ko-fi.com/s/XXXX`).
 
+**Production shop item:** `https://ko-fi.com/s/014936eaac` → `KOFI_HELPER_SHOP_ITEM_CODE=014936eaac`
+
 ---
 
 ## 2. Fly secrets
