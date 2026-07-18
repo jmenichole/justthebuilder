@@ -83,12 +83,17 @@ function criticalMention() {
   return userId ? `<@${userId}>` : "";
 }
 
-export function postError({ context, message, stack }) {
+/**
+ * @param {{ context: string, message: string, stack?: string, critical?: boolean }} opts
+ * Mentions the ops alert user only when `critical: true` (process crashes, etc.).
+ * Routine interaction failures stay quiet so staff aren't pinged on every miss-click.
+ */
+export function postError({ context, message, stack, critical = false }) {
   postOps("error", () => {
-    const mention = criticalMention();
+    const mention = critical ? criticalMention() : "";
     const embed = new EmbedBuilder()
       .setColor(COLORS.error)
-      .setTitle("🔴 Bot error")
+      .setTitle(critical ? "🔴 Critical bot error" : "⚠️ Bot error")
       .setDescription(`**${truncate(context, 100)}**\n\`\`\`\n${truncate(message, 800)}\n\`\`\``)
       .setFooter({ text: botId() })
       .setTimestamp();

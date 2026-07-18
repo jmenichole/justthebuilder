@@ -8,7 +8,8 @@ import { saveTicketConfig } from "./tickets/config.js";
 import { deployTicketPanelForGuild } from "./tickets/handler.js";
 import { loadGuildConfig, saveGuildConfig } from "./storage/guildConfig.js";
 import { postAnalytics } from "./ops.js";
-import { STRUCTURE_UPSELL, justTheHelperUpsell } from "../config/marketing.js";
+import { FREE_CHANNEL_LIMIT, STRUCTURE_UPSELL, justTheHelperUpsell } from "../config/marketing.js";
+import { cloneBlueprintWithChannelCap } from "./blueprintChannelCap.js";
 import fs from "fs";
 import path from "path";
 
@@ -35,10 +36,22 @@ export async function applyBlueprint(guild, blueprint, { ownerUser, mode = "full
   let roleMap = {};
   let channelMap = {};
   let messageResults = { posted: [], failed: [] };
+  // Always keep the full blueprint for persistence; structure mode may apply a capped clone.
+  const persistedBlueprint = blueprint;
+  let structureBlueprint = blueprint;
 
   if (mode === "structure") {
-    if (ownerUser) await sendProgress(ownerUser, "Building your free structure…");
-    const result = await createChannels(guild, blueprint, roleMap, ownerUser, {
+    const capped = cloneBlueprintWithChannelCap(blueprint, FREE_CHANNEL_LIMIT);
+    structureBlueprint = capped.blueprint;
+    if (ownerUser) {
+      await sendProgress(
+        ownerUser,
+        capped.truncated
+          ? `Building your free structure (first ${capped.kept} of ${capped.total} channels)…`
+          : "Building your free structure…"
+      );
+    }
+    const result = await createChannels(guild, structureBlueprint, roleMap, ownerUser, {
       includeTopics: false,
       includeWebhooks: false,
       skipPermissions: true
@@ -108,11 +121,22 @@ export async function applyBlueprint(guild, blueprint, { ownerUser, mode = "full
 
   const end = Date.now();
   const buildSeconds = ((end - start) / 1000).toFixed(2);
-  const categoryCount = Object.keys(blueprint.categories || {}).length;
-  const channelCount = Object.values(blueprint.categories || {}).reduce((a, arr) => a + arr.length, 0);
-  const roleCount = mode === "structure" ? 0 : blueprint.roles?.length || 0;
+  const metricsBlueprint = mode === "structure" ? structureBlueprint : persistedBlueprint;
+  const categoryCount = Object.keys(metricsBlueprint.categories || {}).length;
+  const channelCount = Object.values(metricsBlueprint.categories || {}).reduce(
+    (a, arr) => a + arr.length,
+    0
+  );
+  const roleCount = mode === "structure" ? 0 : persistedBlueprint.roles?.length || 0;
 
-  persistBlueprint(guild.id, blueprint, { buildSeconds, categoryCount, channelCount, roleCount, mode });
+  // Persist the full plan even after a capped free-structure apply.
+  persistBlueprint(guild.id, persistedBlueprint, {
+    buildSeconds,
+    categoryCount,
+    channelCount,
+    roleCount,
+    mode
+  });
   logUsage(guild.id, { buildSeconds, categoryCount, channelCount, roleCount, mode });
 
   try {
@@ -179,15 +203,18 @@ export async function applyBlueprint(guild, blueprint, { ownerUser, mode = "full
     }
   }
 
-  // Post-onboarding server message in a general channel
-  try {
-    const general = guild.channels.cache.find(c => c.name.includes('general') && c.type === 0) ||
-      guild.channels.cache.find(c => c.type === 0);
-    if (general) {
-      await general.send('✨ Your server was built by JustTheBuilder. Use /setup run to customize or rerun.');
+  // Soft note in #general after full/polish only (structure already DMs the upsell).
+  if (mode === "full" || mode === "polish") {
+    try {
+      const general =
+        guild.channels.cache.find((c) => c.name.includes("general") && c.type === 0) ||
+        guild.channels.cache.find((c) => c.type === 0);
+      if (general) {
+        await general.send("✨ Server layout ready — run `/help` for JustTheBuilder commands.");
+      }
+    } catch (err) {
+      log(`General channel post failed: ${err.message}`);
     }
-  } catch (err) {
-    log(`General channel post failed: ${err.message}`);
   }
 
   log(`applyBlueprint complete (mode=${mode}).`);

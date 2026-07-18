@@ -27,6 +27,7 @@ import {
 import { loadGuildConfig, saveGuildConfig } from "../storage/guildConfig.js";
 import { isBotOwner } from "../entitlements.js";
 import { FREE_CHANNEL_LIMIT } from "../../config/marketing.js";
+import { countBlueprintChannels } from "../blueprintChannelCap.js";
 import fs from "fs";
 import path from "path";
 
@@ -281,32 +282,15 @@ export async function runInterview(user, guild, client, preset = null, isPremium
   applyExtras(blueprint, answers);
   applyTicketsToBlueprint(blueprint, answers, { categoriesAnswer: ticketCategoriesAnswer, preset });
 
-  const FREE_LIMIT = FREE_CHANNEL_LIMIT;
-  if (blueprint.categories) {
-    let count = 0;
-    let truncated = false;
-    for (const catName of Object.keys(blueprint.categories)) {
-      const channels = blueprint.categories[catName];
-      if (!Array.isArray(channels)) continue;
-      if (count >= FREE_LIMIT) {
-        blueprint.categories[catName] = [];
-        truncated = true;
-      } else if (count + channels.length > FREE_LIMIT) {
-        blueprint.categories[catName] = channels.slice(0, FREE_LIMIT - count);
-        count = FREE_LIMIT;
-        truncated = true;
-      } else {
-        count += channels.length;
-      }
-    }
-    if (truncated) {
-      const owner = isBotOwner(user.id);
-      await user.send(
-        owner
-          ? `⚠️ Free layout preview is capped at ${FREE_LIMIT} channels. As bot owner you can **Unlock full setup** next at no charge (full polish + no channel cap).`
-          : `⚠️ Free structure capped at ${FREE_LIMIT} channels. Unlock ($0.99) for polish on this layout.`
-      );
-    }
+  // Persist the full plan. Free-structure apply caps channels at apply time only.
+  const channelCount = countBlueprintChannels(blueprint);
+  if (channelCount > FREE_CHANNEL_LIMIT) {
+    const owner = isBotOwner(user.id);
+    await user.send(
+      owner
+        ? `ℹ️ Your plan has **${channelCount}** channels. **Apply free structure** uses the first ${FREE_CHANNEL_LIMIT}; **Unlock full setup** (free for bot owner) applies the full plan.`
+        : `ℹ️ Your plan has **${channelCount}** channels. **Apply free structure** uses the first ${FREE_CHANNEL_LIMIT}; **Unlock** ($0.99) applies the full plan with roles, embeds & tickets.`
+    );
   }
 
   if (isPremium && blueprint.roles) {
@@ -344,25 +328,8 @@ export async function runInterview(user, guild, client, preset = null, isPremium
       );
     }
     await user.send(
-      [
-        "**Almost done — reply with one word:**",
-        "• **`continue`** — save this blueprint and show the build buttons (recommended)",
-        "• **`edit`** — tips for changing rules/FAQ later _(does not re-open the interview)_"
-      ].join("\n")
+      "💡 Embeds post when you unlock polish. Tweak later with `/setup edit-message`, or `/setup nuke` + `/setup run` to rebuild."
     );
-    try {
-      const editChoice = await dm.awaitMessages({
-        filter: (m) => m.author.id === user.id,
-        max: 1,
-        time: 90000
-      });
-      const choice = editChoice.first()?.content?.toLowerCase() || "continue";
-      if (choice.includes("edit")) {
-        await user.send(
-          "💡 Embeds post when you unlock polish. Tweak in-channel after, use `/setup edit-message`, or `/setup nuke` + `/setup run` to rebuild.\n\nSaving your blueprint next…"
-        );
-      }
-    } catch {}
   } else {
     await user.send(
       "ℹ️ You skipped auto-embeds. Channels will be created empty — run `/setup post-messages` later if you change your mind."
@@ -377,11 +344,7 @@ export async function runInterview(user, guild, client, preset = null, isPremium
     return { ok: false };
   }
 
-  const ownerDone = isBotOwner(user.id);
-  await user.send(
-    ownerDone
-      ? "✅ Interview complete! Blueprint saved.\nNext: press **Unlock full setup** (free for bot owner) or **Apply free structure** for the skeleton only."
-      : "✅ Interview complete! Your blueprint is saved.\nChoose **Apply free structure** or **Unlock full setup — $0.99** next."
-  );
+  // Paywall DM (sendFreemiumPaywall) carries the "Interview complete" CTA — keep this short.
+  await user.send("✅ Blueprint saved. Choose how to build in the next message…");
   return { ok: true, blueprint };
 }

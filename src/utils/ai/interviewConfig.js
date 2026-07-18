@@ -219,9 +219,12 @@ export function formatCustomRequest(answer) {
 }
 
 export function parseYes(answer) {
-  const a = (answer || "").toLowerCase();
-  if (a.startsWith("no") || a === "n") return false;
-  return a.includes("yes") || a.includes("y") || a.includes("recommended") || a.includes("both");
+  const a = (answer || "").trim().toLowerCase();
+  if (!a) return false;
+  if (/^(no|n|nope|nah)(\b|[!.,\s]|$)/.test(a) || a.startsWith("no ")) return false;
+  if (/^(yes|y|yeah|yep|yea)\b/.test(a)) return true;
+  if (/\byes\b/.test(a) || /\brecommended\b/.test(a) || /\bboth\b/.test(a)) return true;
+  return false;
 }
 
 export function parseVoiceAnnounce(answer) {

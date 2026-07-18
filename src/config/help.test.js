@@ -13,7 +13,8 @@ describe("help copy", () => {
     assert.match(text, /\/setup run/);
     assert.match(text, /\/setup redeem/);
     assert.match(text, /\/setup unlock/);
-    assert.match(text, /\/help/);
+    assert.match(text, /\/setup post-messages/);
+    assert.match(text, /\/setup nuke/);
   });
 
   it("grant DM with saved blueprint points to unlock", () => {

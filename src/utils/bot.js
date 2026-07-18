@@ -137,18 +137,47 @@ client.on("interactionCreate", async (i) => {
       context: `interaction:${i.commandName || i.customId || "unknown"}`,
       message: err.message || String(err),
       stack: err.stack,
+      critical: false
     });
     if (i.isRepliable?.() && !i.replied && !i.deferred) {
-      await i.reply({ ephemeral: true, content: "❌ Something went wrong. Try again." }).catch(() => {});
+      const userMsg = friendlyInteractionError(err);
+      await i.reply({ ephemeral: true, content: userMsg }).catch(() => {});
     }
   }
 });
+
+/** Map common Discord / permission failures to short user-facing copy. */
+function friendlyInteractionError(err) {
+  const code = err?.code ?? err?.rawError?.code;
+  const msg = String(err?.message || "");
+  if (code === 50013 || /missing permissions/i.test(msg)) {
+    return "❌ I'm missing permissions for that. Give me **Manage Channels**, **Manage Roles**, and **Send Messages**, then try again.";
+  }
+  if (code === 50001 || /missing access/i.test(msg)) {
+    return "❌ I can't access that channel. Check my role is above the channels I'm managing.";
+  }
+  if (code === 50035 || /invalid form body/i.test(msg)) {
+    return "❌ That request looked invalid. Try again, or run `/help` for the next step.";
+  }
+  if (
+    /cannot send messages to this user/i.test(msg) ||
+    (/dm/i.test(msg) && /blocked|closed|cannot/i.test(msg))
+  ) {
+    return "❌ I couldn't DM you. Enable **Allow DMs from server members**, then try again.";
+  }
+  return "❌ Something went wrong. Try again, or run `/help`.";
+}
 
 process.on("uncaughtException", async (err) => {
   console.error("uncaughtException:", err);
   try {
     const { postError } = await import("./ops.js");
-    postError({ context: "uncaughtException", message: err.message, stack: err.stack });
+    postError({
+      context: "uncaughtException",
+      message: err.message,
+      stack: err.stack,
+      critical: true
+    });
   } catch {}
 });
 
@@ -158,7 +187,7 @@ process.on("unhandledRejection", async (reason) => {
   console.error("unhandledRejection:", reason);
   try {
     const { postError } = await import("./ops.js");
-    postError({ context: "unhandledRejection", message, stack });
+    postError({ context: "unhandledRejection", message, stack, critical: true });
   } catch {}
 });
 

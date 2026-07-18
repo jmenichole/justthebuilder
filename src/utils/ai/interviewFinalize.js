@@ -98,17 +98,37 @@ export async function injectInfoEmbeds(blueprint, guild, answers, selectedRuleTe
   }
 
   if (!rulesChannel.message) {
-    const rulesBody =
-      ruleTemplate.rules.map((r, i) => `${i + 1}. ${r}`).join("\n") + "\n\n" + ruleTemplate.footer;
+    // Footer lives on the embed only — avoid duplicating it in the body.
     rulesChannel.message = {
       title: ruleTemplate.title,
-      body: rulesBody,
+      body: ruleTemplate.rules.map((r, i) => `${i + 1}. ${r}`).join("\n"),
       footer: ruleTemplate.footer
     };
     rulesChannel.pinMessage = true;
     rulesChannel.topic = rulesChannel.topic || "Server rules";
     injectedRules = true;
   }
+
+  const aboutMessage = {
+    title: "About this server",
+    body: aboutSummary,
+    sections: [
+      {
+        header: "What to do next",
+        bullets: ["Follow announcements", "Ask questions in #general or open a ticket"]
+      },
+      ...(linkLines.length ? [{ header: "Links", bullets: linkLines }] : [])
+    ]
+  };
+
+  const faqMessage = {
+    title: "FAQ",
+    body: "Quick answers — open a ticket if you need a human.",
+    sections: faqTemplate.slice(0, 6).map((qa) => ({
+      header: qa.q,
+      content: qa.a
+    }))
+  };
 
   if (!hasWelcome) {
     existing.unshift({
@@ -130,18 +150,14 @@ export async function injectInfoEmbeds(blueprint, guild, answers, selectedRuleTe
       name: "about",
       type: "text",
       topic: "About this community",
-      message: {
-        title: "About this server",
-        body: aboutSummary,
-        sections: [
-          {
-            header: "What to do next",
-            bullets: ["Follow announcements", "Ask questions in #general or open a ticket"]
-          },
-          ...(linkLines.length ? [{ header: "Links", bullets: linkLines }] : [])
-        ]
-      }
+      message: { ...aboutMessage }
     });
+  } else {
+    const about = existing.find((ch) => ch.name?.toLowerCase().includes("about"));
+    if (about && !about.message) {
+      about.message = { ...aboutMessage };
+      about.topic = about.topic || "About this community";
+    }
   }
 
   if (!hasFaq) {
@@ -149,15 +165,14 @@ export async function injectInfoEmbeds(blueprint, guild, answers, selectedRuleTe
       name: "faq",
       type: "text",
       topic: "Common questions",
-      message: {
-        title: "FAQ",
-        body: "Quick answers — open a ticket if you need a human.",
-        sections: faqTemplate.slice(0, 6).map((qa) => ({
-          header: qa.q,
-          content: qa.a
-        }))
-      }
+      message: { ...faqMessage }
     });
+  } else {
+    const faq = existing.find((ch) => ch.name?.toLowerCase().includes("faq"));
+    if (faq && !faq.message) {
+      faq.message = { ...faqMessage };
+      faq.topic = faq.topic || "Common questions";
+    }
   }
 
   blueprint.categories[catName] = existing;

@@ -120,6 +120,9 @@ async function sendStaffLog(client, entry) {
  * @param {import('discord.js').ChatInputCommandInteraction} interaction
  */
 export function logStaffSlashCommand(interaction) {
+  // /help is high-volume noise — skip staff channel logging.
+  if (interaction.commandName === "help") return;
+
   const sub = interaction.options.getSubcommand(false);
   const action = sub
     ? `\`/${interaction.commandName} ${sub}\``

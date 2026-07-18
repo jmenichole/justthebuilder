@@ -14,7 +14,7 @@ const grantCommandBuilder = new SlashCommandBuilder()
   .addSubcommand((sub) =>
     sub
       .setName("free-build")
-      .setDescription("One free full /setup run for a server")
+      .setDescription("One free full unlock for a server")
       .addStringOption((opt) =>
         opt
           .setName("guild_id")
