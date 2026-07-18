@@ -8,7 +8,7 @@ import {
   markCodeRedeemed,
   generateRedeemCode
 } from "./store.js";
-import { parseDiscordUserId, verifyKofiToken } from "./webhook.js";
+import { parseDiscordUserId, verifyKofiToken, isJustTheBuilderShopOrder } from "./webhook.js";
 
 const codesFile = path.resolve("data", "kofi", "codes.json");
 
@@ -56,5 +56,28 @@ describe("kofi webhook helpers", () => {
     assert.equal(verifyKofiToken({ verification_token: "wrong" }), false);
     delete process.env.KOFI_VERIFICATION_TOKEN;
     assert.equal(verifyKofiToken({ verification_token: "secret" }), false);
+  });
+
+  it("accepts only JustTheBuilder shop items on a shared Ko-fi account", () => {
+    assert.equal(
+      isJustTheBuilderShopOrder({
+        shop_items: [{ direct_link_code: "2c6f47f1fc", name: "Basic Build Pack" }]
+      }),
+      true
+    );
+    assert.equal(
+      isJustTheBuilderShopOrder({
+        shop_items: [{ direct_link_code: "other-bot-addon-xyz", name: "Other Bot Add-on" }]
+      }),
+      false
+    );
+    process.env.KOFI_SHOP_ITEM_CODE = "my-basic-code";
+    assert.equal(
+      isJustTheBuilderShopOrder({
+        shop_items: [{ direct_link_code: "my-basic-code", name: "Basic" }]
+      }),
+      true
+    );
+    delete process.env.KOFI_SHOP_ITEM_CODE;
   });
 });
