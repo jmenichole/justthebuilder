@@ -184,21 +184,35 @@ async function wipeServer(guild) {
 export async function sendFreemiumPaywall(user, guild) {
   pendingPaywallGuild.set(user.id, guild.id);
 
+  const ownerFree = isBotOwner(user.id);
   const embed = new EmbedBuilder()
     .setColor(0x57f287)
     .setTitle("Interview complete — choose how to build")
     .setDescription(
-      [
-        `_${TAGLINE}_`,
-        "",
-        "✅ **Free:** AI interview + category & channel layout (skeleton)",
-        "🔒 **$0.99:** roles, permissions, embeds, pins & tickets — launch-ready",
-        "",
-        `[Buy on Ko-fi](${KOFI_BASIC_SHOP_URL}) or bot profile → \`/setup redeem\` → \`/setup unlock\``,
-        "Your answers are saved — no re-interview needed.",
-        "",
-        "Run **`/help`** in your server for the full command guide."
-      ].join("\n")
+      ownerFree
+        ? [
+            `_${TAGLINE}_`,
+            "",
+            "You're the **bot owner** — unlock is free for you.",
+            "",
+            "✅ **Apply free structure** — channels/categories only (skeleton)",
+            "🔓 **Unlock full setup** — roles, embeds, pins & tickets (recommended)",
+            "",
+            "Your answers are saved — no re-interview needed.",
+            "",
+            "Run **`/help`** in your server for the full command guide."
+          ].join("\n")
+        : [
+            `_${TAGLINE}_`,
+            "",
+            "✅ **Free:** AI interview + category & channel layout (skeleton)",
+            "🔒 **$0.99:** roles, permissions, embeds, pins & tickets — launch-ready",
+            "",
+            `[Buy on Ko-fi](${KOFI_BASIC_SHOP_URL}) or bot profile → \`/setup redeem\` → \`/setup unlock\``,
+            "Your answers are saved — no re-interview needed.",
+            "",
+            "Run **`/help`** in your server for the full command guide."
+          ].join("\n")
     );
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
@@ -207,7 +221,7 @@ export async function sendFreemiumPaywall(user, guild) {
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
       .setCustomId(`jtb_unlock_polish:${guild.id}`)
-      .setLabel("Unlock full setup — $0.99")
+      .setLabel(ownerFree ? "Unlock full setup (free)" : "Unlock full setup — $0.99")
       .setStyle(ButtonStyle.Primary)
   );
 

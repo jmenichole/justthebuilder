@@ -25,6 +25,7 @@ import {
   JUSTTHEBUILDER_BUILD_SUMMARY
 } from "../presets/justthebuilder.js";
 import { loadGuildConfig, saveGuildConfig } from "../storage/guildConfig.js";
+import { isBotOwner } from "../entitlements.js";
 import { FREE_CHANNEL_LIMIT } from "../../config/marketing.js";
 import fs from "fs";
 import path from "path";
@@ -299,8 +300,11 @@ export async function runInterview(user, guild, client, preset = null, isPremium
       }
     }
     if (truncated) {
+      const owner = isBotOwner(user.id);
       await user.send(
-        `⚠️ Free structure capped at ${FREE_LIMIT} channels. Unlock ($0.99) for polish on this layout.`
+        owner
+          ? `⚠️ Free layout preview is capped at ${FREE_LIMIT} channels. As bot owner you can **Unlock full setup** next at no charge (full polish + no channel cap).`
+          : `⚠️ Free structure capped at ${FREE_LIMIT} channels. Unlock ($0.99) for polish on this layout.`
       );
     }
   }
@@ -340,7 +344,11 @@ export async function runInterview(user, guild, client, preset = null, isPremium
       );
     }
     await user.send(
-      "Reply **continue** to finish the interview, or **edit** for tips on changing copy later."
+      [
+        "**Almost done — reply with one word:**",
+        "• **`continue`** — save this blueprint and show the build buttons (recommended)",
+        "• **`edit`** — tips for changing rules/FAQ later _(does not re-open the interview)_"
+      ].join("\n")
     );
     try {
       const editChoice = await dm.awaitMessages({
@@ -351,7 +359,7 @@ export async function runInterview(user, guild, client, preset = null, isPremium
       const choice = editChoice.first()?.content?.toLowerCase() || "continue";
       if (choice.includes("edit")) {
         await user.send(
-          "💡 Embeds post when you unlock polish. Tweak in-channel after, use `/setup edit-message`, or `/setup nuke` + `/setup run` to rebuild."
+          "💡 Embeds post when you unlock polish. Tweak in-channel after, use `/setup edit-message`, or `/setup nuke` + `/setup run` to rebuild.\n\nSaving your blueprint next…"
         );
       }
     } catch {}
@@ -369,8 +377,11 @@ export async function runInterview(user, guild, client, preset = null, isPremium
     return { ok: false };
   }
 
+  const ownerDone = isBotOwner(user.id);
   await user.send(
-    "✅ Interview complete! Your blueprint is saved.\nChoose **Apply free structure** or **Unlock full setup — $0.99** next."
+    ownerDone
+      ? "✅ Interview complete! Blueprint saved.\nNext: press **Unlock full setup** (free for bot owner) or **Apply free structure** for the skeleton only."
+      : "✅ Interview complete! Your blueprint is saved.\nChoose **Apply free structure** or **Unlock full setup — $0.99** next."
   );
   return { ok: true, blueprint };
 }
