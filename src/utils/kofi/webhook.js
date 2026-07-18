@@ -27,7 +27,33 @@ export function verifyKofiToken(payload) {
   return payload?.verification_token === expected;
 }
 
-/** Creator Pack ($2.99) grants 3 polish credits; Basic Pack grants 1. */
+/** Default Basic Build Pack shop link suffix (ko-fi.com/s/2c6f47f1fc). */
+const DEFAULT_BASIC_SHOP_CODE = "2c6f47f1fc";
+
+/**
+ * Ko-fi sends one webhook for the whole account — only issue JTB codes for our shop items.
+ * @param {object} payload
+ * @returns {boolean}
+ */
+export function isJustTheBuilderShopOrder(payload) {
+  const items = payload.shop_items || [];
+  if (items.length === 0) return false;
+
+  const allowed = new Set([DEFAULT_BASIC_SHOP_CODE]);
+  const basic = process.env.KOFI_SHOP_ITEM_CODE?.trim();
+  const creator = process.env.KOFI_CREATOR_SHOP_ITEM_CODE?.trim();
+  if (basic) allowed.add(basic);
+  if (creator) allowed.add(creator);
+
+  return items.some((item) => {
+    const code = String(item.direct_link_code || "");
+    for (const allowedCode of allowed) {
+      if (code === allowedCode || code.includes(allowedCode)) return true;
+    }
+    return false;
+  });
+}
+
 export function polishCreditsForShopOrder(payload) {
   const creatorCode = process.env.KOFI_CREATOR_SHOP_ITEM_CODE?.trim();
   const items = payload.shop_items || [];
@@ -58,17 +84,12 @@ export async function handleKofiPayload(payload, client) {
     return { ok: true, reason: "ignored_type" };
   }
 
-  const shopUrl = process.env.KOFI_SHOP_URL || "https://ko-fi.com/s/2c6f47f1fc";
-  const items = payload.shop_items || [];
-  const matchesShop =
-    !process.env.KOFI_SHOP_ITEM_CODE ||
-    items.some(
-      (item) =>
-        String(item.direct_link_code || "") === String(process.env.KOFI_SHOP_ITEM_CODE) ||
-        String(item.direct_link_code || "").includes("2c6f47f1fc")
+  if (!isJustTheBuilderShopOrder(payload)) {
+    const items = payload.shop_items || [];
+    log(
+      `[kofi] ignored shop order (not JustTheBuilder): ${items.map((i) => i.direct_link_code || i.name || "?").join(", ") || "no items"}`
     );
-  if (!matchesShop && items.length > 0) {
-    log(`[kofi] shop order items: ${items.map((i) => i.direct_link_code).join(", ")}`);
+    return { ok: true, reason: "ignored_shop_item" };
   }
 
   const discordUserId =

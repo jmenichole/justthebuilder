@@ -2,6 +2,27 @@
 
 Shop: **https://ko-fi.com/s/2c6f47f1fc**
 
+Ko-fi provides **one webhook per account** — all shop orders (every product you sell) hit the same URL. JustTheBuilder **ignores** shop orders that are not its items (no redeem code, no DM).
+
+| Event | What happens |
+|--------|----------------|
+| Donation / membership / non-shop | Ignored (`ignored_type`) |
+| Shop order for **another** product | Ignored (`ignored_shop_item`) |
+| Shop order for **Basic Build Pack** (`2c6f47f1fc`) | `JTB-XXXXXX` code + optional DM |
+| Shop order for **Creator Pack** (when listed) | 3 credits — set `KOFI_CREATOR_SHOP_ITEM_CODE` |
+
+To allow a new JTB shop item, set its `direct_link_code` in Fly env:
+
+```bash
+flyctl secrets set KOFI_SHOP_ITEM_CODE=your-item-code -a justthebuilder
+# and/or for Creator Pack:
+flyctl secrets set KOFI_CREATOR_SHOP_ITEM_CODE=your-creator-code -a justthebuilder
+```
+
+Find `direct_link_code` in the Ko-fi shop item URL (`ko-fi.com/s/XXXX`) or webhook test payload `shop_items[].direct_link_code`.
+
+**Other bots' add-ons:** no action needed — they are ignored automatically. Each other bot would need its own webhook endpoint on its own Fly app (or a shared router you build separately).
+
 ## Important: Ko-fi has no custom redirect URL
 
 Ko-fi does **not** send buyers to an external URL after checkout. They stay on Ko-fi’s built-in thank-you screen.
