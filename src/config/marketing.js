@@ -20,3 +20,45 @@ export const STRUCTURE_UPSELL = [
   "",
   "_Free: AI designs your server. $0.99: we build it._"
 ].join("\n");
+
+/** Discord OAuth invite for the companion bot (set JUSTTHEHELPER_CLIENT_ID or JUSTTHEHELPER_INVITE_URL). */
+export function getJustTheHelperInviteUrl() {
+  const direct = process.env.JUSTTHEHELPER_INVITE_URL?.trim();
+  if (direct) return direct;
+  const clientId = process.env.JUSTTHEHELPER_CLIENT_ID?.trim();
+  if (!clientId) return null;
+  return `https://discord.com/oauth2/authorize?client_id=${clientId}&scope=bot%20applications.commands`;
+}
+
+/**
+ * Soft upsell for JustTheHelper after a build completes.
+ * @param {{ variant?: 'structure' | 'polish' | 'full' }} [opts]
+ * @returns {string} Markdown block, or "" when disabled
+ */
+export function justTheHelperUpsell({ variant = "polish" } = {}) {
+  if (/^(0|false|off|no)$/i.test(String(process.env.JUSTTHEHELPER_UPSELL || ""))) return "";
+
+  const invite = getJustTheHelperInviteUrl();
+  const name = invite ? `[JustTheHelper](${invite})` : "**JustTheHelper**";
+
+  if (variant === "structure") {
+    return [
+      "",
+      "───",
+      "🎫 **Growing your community?**",
+      `${name} — free **welcome + verify** and **/remind**; **$1.99/mo** unlocks private-thread **support tickets** (claim, close, staff flow).`,
+      "Add it to this server, then run `/welcome post` to get started."
+    ].join("\n");
+  }
+
+  return [
+    "",
+    "───",
+    "🎫 **Level up member support**",
+    `${name} pairs well with your new server:`,
+    "• **Free:** welcome + verify button, personal `/remind`",
+    "• **$1.99/mo (guild):** private-thread ticket panel — open → claim → close",
+    "",
+    "_JustTheBuilder built the layout; JustTheHelper runs day-to-day support._"
+  ].join("\n");
+}
