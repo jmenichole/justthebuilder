@@ -17,8 +17,12 @@ Use these instead:
 
 ### Suggested shop thank-you message (paste in Ko-fi)
 
+**Basic Build Pack ($0.99):**
+
 ```
 Thanks for your purchase! 🎉
+
+Free: AI designs your server. $0.99: we build it.
 
 1. Open Discord → a server YOU OWN with JustTheBuilder
 2. Run /setup run (if you haven't done the interview)
@@ -30,6 +34,8 @@ Your code: check DMs from JustTheBuilder (if you entered your Discord User ID at
 Full instructions: https://justthebuilder.fly.dev/kofi/thanks
 Support: https://discord.gg/NEePze3rZd
 ```
+
+**Creator Pack ($2.99 — 3 unlock credits):** List as a separate Ko-fi shop item named "Creator Pack". Webhook auto-grants 3 credits when amount ≥ $2.50 or item name contains "Creator". Set `KOFI_CREATOR_SHOP_ITEM_CODE` if needed.
 
 ### Recommended checkout question (Ko-fi shop item)
 

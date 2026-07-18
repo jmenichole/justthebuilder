@@ -27,6 +27,22 @@ export function verifyKofiToken(payload) {
   return payload?.verification_token === expected;
 }
 
+/** Creator Pack ($2.99) grants 3 polish credits; Basic Pack grants 1. */
+export function polishCreditsForShopOrder(payload) {
+  const creatorCode = process.env.KOFI_CREATOR_SHOP_ITEM_CODE?.trim();
+  const items = payload.shop_items || [];
+  if (creatorCode && items.some((i) => String(i.direct_link_code || "") === creatorCode)) {
+    return 3;
+  }
+  const labels = items
+    .map((i) => `${i.direct_link_code || ""} ${i.variation_name || ""} ${i.name || ""}`.toLowerCase())
+    .join(" ");
+  if (/creator|3-pack|3 pack|three pack/.test(labels)) return 3;
+  const amount = parseFloat(String(payload.amount || "0"));
+  if (amount >= 2.5) return 3;
+  return 1;
+}
+
 /**
  * Handle a verified Ko-fi webhook payload.
  * @param {object} payload
@@ -60,6 +76,8 @@ export async function handleKofiPayload(payload, client) {
     parseDiscordUserId(payload.discord_user_id) ||
     parseDiscordUserId(payload.custom_fields?.discord_user_id);
 
+  const polishCredits = polishCreditsForShopOrder(payload);
+
   const entry = createCodeForOrder({
     kofiTransactionId: payload.kofi_transaction_id,
     messageId: payload.message_id,
@@ -67,23 +85,29 @@ export async function handleKofiPayload(payload, client) {
     fromName: payload.from_name,
     amount: payload.amount,
     currency: payload.currency,
-    discordUserId
+    discordUserId,
+    polishCredits
   });
 
   if (client && discordUserId && entry.status === "pending") {
     try {
       const user = await client.users.fetch(discordUserId);
       const thanksUrl = publicThanksUrl(entry.code);
+      const packLabel =
+        polishCredits > 1
+          ? `Creator Pack — **${polishCredits} unlock credits**`
+          : "Basic Build Pack — **1 unlock credit**";
       await user.send(
         [
           "🎉 **Thanks for your Ko-fi purchase!**",
           "",
-          `Your unlock code: \`${entry.code}\``,
+          packLabel,
+          `Your redeem code: \`${entry.code}\``,
           "",
           "In a server **you own**:",
-          `1. Run \`/setup run\` if you haven't finished the interview`,
+          "1. Run `/setup run` if you haven't finished the interview",
           `2. Run \`/setup redeem code:${entry.code}\``,
-          "3. Run \`/setup unlock\` to apply full polish",
+          "3. Run `/setup unlock` to apply full polish",
           "",
           `More help: ${thanksUrl}`
         ].join("\n")

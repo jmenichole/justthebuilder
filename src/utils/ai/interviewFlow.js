@@ -25,6 +25,7 @@ import {
   JUSTTHEBUILDER_BUILD_SUMMARY
 } from "../presets/justthebuilder.js";
 import { loadGuildConfig, saveGuildConfig } from "../storage/guildConfig.js";
+import { FREE_CHANNEL_LIMIT } from "../config/marketing.js";
 import fs from "fs";
 import path from "path";
 
@@ -279,7 +280,7 @@ export async function runInterview(user, guild, client, preset = null, isPremium
   applyExtras(blueprint, answers);
   applyTicketsToBlueprint(blueprint, answers, { categoriesAnswer: ticketCategoriesAnswer, preset });
 
-  const FREE_LIMIT = 20;
+  const FREE_LIMIT = FREE_CHANNEL_LIMIT;
   if (blueprint.categories) {
     let count = 0;
     let truncated = false;

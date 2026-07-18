@@ -3,10 +3,12 @@ import { log } from "../logger.js";
 import { applyBlueprint, loadPersistedBlueprint } from "../applyBlueprint.js";
 import { postMessagesToExistingChannels } from "../builder/messages.js";
 import { loadGuildConfig } from "../storage/guildConfig.js";
-import { canApplyPolish, findUnconsumedBasicPack, guildHasPolishApplied, isBotOwner } from "../entitlements.js";
+import { canApplyPolish, findUnconsumedBasicPack, fetchUserEntitlements, guildHasPolishApplied, isBotOwner } from "../entitlements.js";
 import { clearManualPolishGrant, markGrandfatherFullUsed } from "../grandfather.js";
 import { postAnalytics } from "../ops.js";
 import { deferEphemeral, isInteractionTokenError, replyEphemeral } from "../interactionUi.js";
+import { KOFI_BASIC_SHOP_URL, TAGLINE } from "../config/marketing.js";
+import { consumePolishCredit } from "../userCredits.js";
 import fs from 'fs';
 import path from 'path';
 import {
@@ -68,7 +70,7 @@ export const SetupCommandData = {
     {
       type: 1,
       name: "redeem",
-      description: "Redeem a Ko-fi purchase code for this server",
+      description: "Redeem a Ko-fi purchase code to your account (usable on any server you own)",
       options: [
         {
           type: 3,
@@ -186,11 +188,13 @@ export async function sendFreemiumPaywall(user, guild) {
     .setTitle("Interview complete — choose how to build")
     .setDescription(
       [
-        "✅ **Free now:** categories + channel names (empty channels)",
-        "🔒 **$0.99 unlock:** roles, permissions, topics, embeds, pins, tickets",
+        `_${TAGLINE}_`,
         "",
-        "Buy on [Ko-fi](https://ko-fi.com/s/2c6f47f1fc) or from the bot profile, then `/setup redeem` + `/setup unlock`.",
-        "Your answers are saved. Unlock later with `/setup unlock` after purchase."
+        "✅ **Free:** AI interview + category & channel layout (skeleton)",
+        "🔒 **$0.99:** roles, permissions, embeds, pins & tickets — launch-ready",
+        "",
+        `[Buy on Ko-fi](${KOFI_BASIC_SHOP_URL}) or bot profile → \`/setup redeem\` → \`/setup unlock\``,
+        "Your answers are saved — no re-interview needed."
       ].join("\n")
     );
   const row = new ActionRowBuilder().addComponents(
@@ -238,7 +242,7 @@ export async function applyPolishForInteraction(interaction, guild, ownerUser) {
     };
   }
 
-  const access = canApplyPolish(interaction, guild);
+  const access = await canApplyPolish(interaction, guild);
   if (!access.allowed) {
     postAnalytics({
       event: "upgrade_denied",
@@ -253,11 +257,12 @@ export async function applyPolishForInteraction(interaction, guild, ownerUser) {
     return {
       ok: false,
       message: [
-        "🔒 **Full setup needs a Basic Build Pack ($0.99).**",
-        "• [Buy on Ko-fi](https://ko-fi.com/s/2c6f47f1fc) → `/setup redeem` → `/setup unlock`",
+        "🔒 **Launch-ready setup needs an unlock ($0.99).**",
+        `• [Basic — $0.99](${KOFI_BASIC_SHOP_URL}) → \`/setup redeem\` → \`/setup unlock\``,
         "• Or buy from the bot profile → `/setup unlock`",
         "",
-        "Your interview answers are saved — no re-interview needed."
+        `_${TAGLINE}_`,
+        "Your interview is saved — no re-interview needed."
       ].join("\n")
     };
   }
@@ -270,7 +275,11 @@ export async function applyPolishForInteraction(interaction, guild, ownerUser) {
   await applyBlueprint(guild, blueprint, { ownerUser, mode });
 
   if (access.reason === "pack") {
-    const ent = findUnconsumedBasicPack(interaction.entitlements);
+    const ent =
+      access.packEntitlement ||
+      findUnconsumedBasicPack(
+        await fetchUserEntitlements(interaction.client, interaction.user.id, interaction.entitlements)
+      );
     if (ent) await interaction.client.application.consumeEntitlement(ent.id);
     postAnalytics({
       event: "pack_consumed",
@@ -294,10 +303,22 @@ export async function applyPolishForInteraction(interaction, guild, ownerUser) {
       fields: [{ name: "Guild", value: `\`${guild.id}\``, inline: true }]
     });
   }
+  if (access.reason === "credit") {
+    const remaining = consumePolishCredit(interaction.user.id);
+    postAnalytics({
+      event: "credit_consumed",
+      title: "Unlock credit consumed",
+      fields: [
+        { name: "Guild", value: `\`${guild.id}\``, inline: true },
+        { name: "User", value: `<@${interaction.user.id}>`, inline: true },
+        { name: "Credits left", value: String(remaining), inline: true }
+      ]
+    });
+  }
 
   return {
     ok: true,
-    message: "✅ Unlock complete — polish applied! Check your DMs for details."
+    message: "✅ **Launch-ready!** Roles, embeds, pins & tickets applied. Check your DMs for details."
   };
 }
 
@@ -501,7 +522,7 @@ export async function handleSetupInteraction(interaction, client) {
       log(`Nuke done but DM failed: ${err.message}`);
     }
   } else if (sub === "post-messages") {
-    const access = canApplyPolish(interaction, interaction.guild);
+    const access = await canApplyPolish(interaction, interaction.guild);
     const polished = guildHasPolishApplied(interaction.guild.id);
     if (!access.allowed && !polished && !isBotOwner(interaction.user.id)) {
       return interaction.reply({
@@ -533,7 +554,7 @@ export async function handleSetupInteraction(interaction, client) {
       await interaction.followUp({ ephemeral: true, content: `❌ Failed: ${err.message}` });
     }
   } else if (sub === "ticket-panel") {
-    const access = canApplyPolish(interaction, interaction.guild);
+    const access = await canApplyPolish(interaction, interaction.guild);
     const polished = guildHasPolishApplied(interaction.guild.id);
     if (!access.allowed && !polished && !isBotOwner(interaction.user.id)) {
       return interaction.reply({
@@ -636,7 +657,7 @@ export async function handleSetupInteraction(interaction, client) {
 
     await interaction.followUp({ ephemeral: true, content: results.join('\n') });
   } else if (sub === 'edit-message') {
-    const access = canApplyPolish(interaction, interaction.guild);
+    const access = await canApplyPolish(interaction, interaction.guild);
     const polished = guildHasPolishApplied(interaction.guild.id);
     if (!access.allowed && !polished && !isBotOwner(interaction.user.id)) {
       return interaction.reply({

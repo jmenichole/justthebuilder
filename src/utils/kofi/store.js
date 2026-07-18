@@ -44,6 +44,7 @@ export function generateRedeemCode() {
  * @param {string} [order.amount]
  * @param {string} [order.currency]
  * @param {string} [order.discordUserId]
+ * @param {number} [order.polishCredits=1]
  */
 export function createCodeForOrder(order) {
   const all = loadAll();
@@ -66,6 +67,7 @@ export function createCodeForOrder(order) {
     amount: order.amount || null,
     currency: order.currency || null,
     discordUserId: order.discordUserId || null,
+    polishCredits: Math.max(1, Math.floor(Number(order.polishCredits) || 1)),
     createdAt: new Date().toISOString(),
     redeemedAt: null,
     redeemedByUserId: null,

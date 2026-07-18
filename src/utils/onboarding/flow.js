@@ -1,8 +1,8 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
 import { buildPreviewBlueprint } from './preview.js';
-import { applyBlueprint, persistBlueprintOnly } from '../applyBlueprint.js';
-import { sendFreemiumPaywall } from '../commands/setup.js';
+import { applyBlueprint, loadPersistedBlueprint, persistBlueprintOnly } from '../applyBlueprint.js';
 import { canApplyPolish, guildHasPolishApplied, isBotOwner } from '../entitlements.js';
+import { TAGLINE } from '../config/marketing.js';
 import { loadGuildConfig } from '../storage/guildConfig.js';
 import { sendProgress } from '../progress.js';
 import { log } from '../logger.js';
@@ -42,7 +42,13 @@ export async function startOnboarding(user, guild, client) {
     new ButtonBuilder().setCustomId('jtb_adv').setLabel('🛠️ Advanced Options').setStyle(ButtonStyle.Secondary)
   );
   await user.send({
-    content: '👋 Hey! I’m **JustTheBuilder**, your AI-powered server setup assistant.\nI can build your entire server from scratch in under 30 seconds.\nReady to set things up?',
+    content: [
+      '👋 Hey! I’m **JustTheBuilder**, your AI-powered server setup assistant.',
+      `_${TAGLINE}_`,
+      '',
+      'Tap **Start Setup** for the AI interview in DMs, or run **`/setup run`** in your server.',
+      'Free: layout skeleton. $0.99: roles, embeds, pins & tickets.'
+    ].join('\n'),
     components: [row]
   });
 }
@@ -129,10 +135,38 @@ export async function handleOnboardingComponent(interaction, client) {
   if (!state) return;
   const user = interaction.user;
 
-  // START
+  // START — same AI interview as /setup run (legacy wizard steps below are unused)
   if (interaction.customId === 'jtb_start') {
-    state.step = 1; await interaction.reply({ ephemeral: true, content: 'Starting setup…' }); await sendServerTypeSelect(user); return; }
-  if (interaction.customId === 'jtb_help') { await interaction.reply({ ephemeral: true, content: 'I build roles, channels, embeds, permissions automatically.' }); return; }
+    const guild = client.guilds.cache.get(state.guildId);
+    await interaction.reply({ ephemeral: true, content: 'Starting AI interview in your DMs…' });
+    sessions.delete(userId);
+    if (!guild) {
+      await interaction.followUp({ ephemeral: true, content: '⚠️ Could not find your server. Run `/setup run` there instead.' });
+      return;
+    }
+    try {
+      const result = await runInterview(user, guild, client);
+      if (result?.ok) await sendFreemiumPaywall(user, guild);
+    } catch (err) {
+      log(`Install onboarding interview failed: ${err.message}`);
+      await interaction.followUp({ ephemeral: true, content: `❌ Interview failed: ${err.message}` }).catch(() => {});
+    }
+    return;
+  }
+  if (interaction.customId === 'jtb_help') {
+    await interaction.reply({
+      ephemeral: true,
+      content: [
+        `_${TAGLINE}_`,
+        '',
+        '✅ **Free:** AI interview + category & channel layout',
+        '🔒 **$0.99:** roles, permissions, embeds, pins & tickets',
+        '',
+        'Run **`/setup run`** in your server to start.'
+      ].join('\n')
+    });
+    return;
+  }
   if (interaction.customId === 'jtb_adv') { await interaction.reply({ ephemeral: true, content: 'Advanced options coming soon.' }); return; }
 
   // Server type
@@ -195,13 +229,17 @@ export async function handlePostBuildButtons(interaction, client) {
   } else if (id === 'jtb_reapply') {
     await interaction.reply({ ephemeral: true, content: 'Reapplying last blueprint…' });
     try {
-      const latest = JSON.parse(fs.readFileSync(path.resolve('data', 'blueprints', 'latest-preview.json'), 'utf-8'));
       const guild = client.guilds.cache.find(g => g.members.cache.has(user.id));
       if (!guild) {
         await interaction.followUp({ ephemeral: true, content: 'Could not find a server you belong to.' });
         return;
       }
-      const access = canApplyPolish(interaction, guild);
+      const latest = loadPersistedBlueprint(guild.id);
+      if (!latest) {
+        await interaction.followUp({ ephemeral: true, content: 'No saved blueprint. Run `/setup run` first.' });
+        return;
+      }
+      const access = await canApplyPolish(interaction, guild);
       const polished = guildHasPolishApplied(guild.id);
       if (access.allowed || polished || isBotOwner(interaction.user.id)) {
         const cfg = loadGuildConfig(guild.id);
