@@ -1,6 +1,6 @@
 # Slash `/help` + Helper Install Onboarding Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add `/help` to both bots and Helper install onboarding DM (owner + system-channel fallback) so new admins know which slash commands to run first.
 
@@ -40,7 +40,7 @@
 **Interfaces:**
 - Produces: `export function buildHelpMessage()` → `string` (markdown, ≤2000 chars)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```javascript
 // src/config/help.test.js
@@ -59,14 +59,14 @@ describe("buildHelpMessage", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 node --test src/config/help.test.js
 ```
 Expected: FAIL — cannot find module `./help.js`
 
-- [ ] **Step 3: Implement `src/config/help.js`**
+- [x] **Step 3: Implement `src/config/help.js`**
 
 ```javascript
 import { TAGLINE, getJustTheHelperInviteUrl } from "./marketing.js";
@@ -94,14 +94,14 @@ export function buildHelpMessage() {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 node --test src/config/help.test.js
 ```
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/config/help.js src/config/help.test.js
@@ -120,7 +120,7 @@ git commit -m "feat(help): add JustTheBuilder help copy module"
 - Consumes: `buildHelpMessage()` from `src/config/help.js`
 - Produces: `HelpCommandData`, `handleHelpCommand(interaction)` → boolean
 
-- [ ] **Step 1: Create command module**
+- [x] **Step 1: Create command module**
 
 ```javascript
 // src/utils/commands/help.js
@@ -139,15 +139,15 @@ export async function handleHelpCommand(interaction) {
 }
 ```
 
-- [ ] **Step 2: Register in `src/utils/bot.js`**
+- [x] **Step 2: Register in `src/utils/bot.js`**
 
 Import `HelpCommandData`, `handleHelpCommand`. Add to `Routes.applicationCommands` body array alongside `SetupCommandData`. In `interactionCreate`, call `handleHelpCommand` before setup handler.
 
-- [ ] **Step 3: Manual verify**
+- [x] **Step 3: Manual verify**
 
 Deploy or run bot locally; `/help` returns ephemeral guide.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/utils/commands/help.js src/utils/bot.js
@@ -164,17 +164,17 @@ git commit -m "feat(help): register /help slash command on JustTheBuilder"
 **Interfaces:**
 - Consumes: `buildHelpMessage()` from `src/config/help.js`
 
-- [ ] **Step 1: Replace inline `jtb_help` content**
+- [x] **Step 1: Replace inline `jtb_help` content**
 
 In `jtb_help` handler, `interaction.reply({ ephemeral: true, content: buildHelpMessage() })`.
 
-- [ ] **Step 2: Run existing tests**
+- [x] **Step 2: Run existing tests**
 
 ```bash
 node --test src/config/marketing.test.js src/config/help.test.js
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/utils/onboarding/flow.js
@@ -194,7 +194,7 @@ git commit -m "refactor: jtb_help button uses shared help copy"
 **Interfaces:**
 - Produces: `export function buildHelpMessage({ shopUrl } = {})` → `string`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```javascript
 import { describe, it } from "node:test";
@@ -212,11 +212,11 @@ describe("buildHelpMessage", () => {
 });
 ```
 
-- [ ] **Step 2: Implement `src/config/help.js`**
+- [x] **Step 2: Implement `src/config/help.js`**
 
 Include sections: free welcome, `/remind`, unlock tickets (`/subscribe info` → shop URL → `/subscribe status`), tickets setup/panel, footer. Read default shop URL from param; command handler passes `kofiPageUrl()` from billing.
 
-- [ ] **Step 3: Run test, commit**
+- [x] **Step 3: Run test, commit**
 
 ```bash
 node --test src/config/help.test.js
@@ -232,11 +232,11 @@ git commit -m "feat(help): add JustTheHelper help copy module"
 - Create: `src/utils/commands/help.js`
 - Modify: `src/utils/bot.js`
 
-- [ ] **Step 1: Create handler** — ephemeral reply with `buildHelpMessage({ shopUrl: kofiPageUrl() })`.
+- [x] **Step 1: Create handler** — ephemeral reply with `buildHelpMessage({ shopUrl: kofiPageUrl() })`.
 
-- [ ] **Step 2: Register** — add `HelpCommandData` to REST put body: `[WelcomeCommandData, SubscribeCommandData, TicketsCommandData, RemindCommandData, HelpCommandData]`.
+- [x] **Step 2: Register** — add `HelpCommandData` to REST put body: `[WelcomeCommandData, SubscribeCommandData, TicketsCommandData, RemindCommandData, HelpCommandData]`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/utils/commands/help.js src/utils/bot.js
@@ -255,13 +255,13 @@ git commit -m "feat(help): register /help on JustTheHelper"
 **Interfaces:**
 - Produces: `startHelperOnboarding(user, guild, client)`, `handleHelperOnboardingButton(interaction)`
 
-- [ ] **Step 1: Implement `startHelperOnboarding`**
+- [x] **Step 1: Implement `startHelperOnboarding`**
 
 Mirror Builder pattern:
 - DM owner with short intro + 3 buttons (`jth_help_welcome`, `jth_help_subscribe`, `jth_help_commands`)
 - `catch`: `guild.systemChannel?.send("⚠️ I couldn't DM you… Run /help in your server.")`
 
-- [ ] **Step 2: Button handler**
+- [x] **Step 2: Button handler**
 
 | customId | Reply content |
 |----------|----------------|
@@ -269,13 +269,13 @@ Mirror Builder pattern:
 | `jth_help_subscribe` | `/subscribe info` + shop URL |
 | `jth_help_commands` | full `buildHelpMessage()` |
 
-- [ ] **Step 3: Wire `guildCreate.js`**
+- [x] **Step 3: Wire `guildCreate.js`**
 
 After `postGuildInstall`, `fetchOwner()`, call `startHelperOnboarding`.
 
-- [ ] **Step 4: Wire `bot.js` `interactionCreate`** for `isButton()` → `handleHelperOnboardingButton`.
+- [x] **Step 4: Wire `bot.js` `interactionCreate`** for `isButton()` → `handleHelperOnboardingButton`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/utils/onboarding/flow.js src/utils/events/guildCreate.js src/utils/bot.js
@@ -286,14 +286,14 @@ git commit -m "feat(onboarding): Helper install DM with help buttons"
 
 ### Task 7: Deploy + manual smoke
 
-- [ ] **justthebuilder:** push `main`, confirm Fly deploy green, `/help` works in test guild.
+- [x] **justthebuilder:** push `main`, confirm Fly deploy green, `/help` works in test guild.
 
-- [ ] **justthehelper:** push branch, `fly deploy -a justthehelper`, re-invite bot:
+- [x] **justthehelper:** push branch, `fly deploy -a justthehelper`, re-invite bot:
   - Owner receives DM OR system-channel fallback
   - Buttons return correct hints
   - `/help` matches button “command list”
 
-- [ ] **Commit docs** (justthebuilder repo only):
+- [x] **Commit docs** (justthebuilder repo only):
 
 ```bash
 # already in spec; optional README one-liner under commands

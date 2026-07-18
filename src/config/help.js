@@ -149,3 +149,33 @@ export function buildKofiPurchaseDm({ code, thanksUrl, polishCredits = 1 }) {
 export function buildInstallHelpHint() {
   return "Run **`/help`** in your server anytime for commands.";
 }
+
+/**
+ * Owner DM when they win the install surprise lottery.
+ * @param {{ guildName: string, hasBlueprint?: boolean }} opts
+ */
+export function buildSurpriseGrantOwnerDm({ guildName, hasBlueprint = false }) {
+  const lines = [
+    "🎉 **Surprise — you won a free full server unlock!**",
+    "",
+    "We're growing JustTheBuilder and picked your install for a **complimentary upgrade**. Help us test, share feedback if you can, and enjoy the full build on us.",
+    "",
+    `Server: **${guildName}**`,
+    ""
+  ];
+
+  if (hasBlueprint) {
+    lines.push(
+      "Your interview is **saved** — run **`/setup unlock`** in that server to apply roles, embeds, pins & tickets."
+    );
+  } else {
+    lines.push(
+      "**Next steps (server owner, in that server):**",
+      "1. Run **`/setup run`** — quick AI interview in DMs",
+      "2. Run **`/setup unlock`** — your surprise covers the full build"
+    );
+  }
+
+  lines.push("", "Run **`/help`** anytime. Thanks for trying us out! 💛");
+  return lines.join("\n");
+}

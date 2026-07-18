@@ -147,6 +147,20 @@ export function postGuildInstall(guild) {
   });
 }
 
+export function postSurpriseGrant(guild, { installNumber, grantsAwarded }) {
+  postAnalytics({
+    event: "surprise_grant",
+    title: "🎁 Surprise free unlock",
+    description: `**${guild.name}** won the install lottery`,
+    color: COLORS.purchase,
+    fields: [
+      { name: "Guild ID", value: `\`${guild.id}\``, inline: true },
+      { name: "Install #", value: String(installNumber ?? "?"), inline: true },
+      { name: "Total grants", value: String(grantsAwarded ?? "?"), inline: true }
+    ]
+  });
+}
+
 export function postPurchase({ userId, skuId, skuLabel }) {
   postAnalytics({
     event: "purchase",

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   buildGrantFreeBuildOwnerDm,
   buildHelpMessage,
+  buildSurpriseGrantOwnerDm,
   buildUnlockDeniedMessage
 } from "./help.js";
 
@@ -38,5 +39,11 @@ describe("help copy", () => {
     const text = buildUnlockDeniedMessage();
     assert.match(text, /\/setup redeem/);
     assert.match(text, /\/help/);
+  });
+
+  it("surprise grant DM points to unlock path", () => {
+    const text = buildSurpriseGrantOwnerDm({ guildName: "Lucky Guild", hasBlueprint: true });
+    assert.match(text, /Surprise/i);
+    assert.match(text, /\/setup unlock/);
   });
 });
