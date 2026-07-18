@@ -5,6 +5,7 @@ import path from "path";
 import {
   allowedShopCodes,
   getKofiApiKey,
+  isJustTheHelperShopOrder,
   kofiApiRequest,
   listShopItems,
   syncShopCatalog
@@ -16,6 +17,7 @@ const envBackup = {};
 beforeEach(() => {
   envBackup.KOFI_API_KEY = process.env.KOFI_API_KEY;
   envBackup.KOFI_SHOP_ITEM_CODE = process.env.KOFI_SHOP_ITEM_CODE;
+  envBackup.KOFI_HELPER_SHOP_ITEM_CODE = process.env.KOFI_HELPER_SHOP_ITEM_CODE;
   process.env.KOFI_API_KEY = "KF_API_test_key";
 });
 
@@ -24,6 +26,8 @@ afterEach(() => {
   else process.env.KOFI_API_KEY = envBackup.KOFI_API_KEY;
   if (envBackup.KOFI_SHOP_ITEM_CODE === undefined) delete process.env.KOFI_SHOP_ITEM_CODE;
   else process.env.KOFI_SHOP_ITEM_CODE = envBackup.KOFI_SHOP_ITEM_CODE;
+  if (envBackup.KOFI_HELPER_SHOP_ITEM_CODE === undefined) delete process.env.KOFI_HELPER_SHOP_ITEM_CODE;
+  else process.env.KOFI_HELPER_SHOP_ITEM_CODE = envBackup.KOFI_HELPER_SHOP_ITEM_CODE;
   if (fs.existsSync(catalogPath)) fs.unlinkSync(catalogPath);
   delete globalThis.fetch;
 });
@@ -71,5 +75,23 @@ describe("kofi api client", () => {
   it("throws when API key missing", async () => {
     delete process.env.KOFI_API_KEY;
     await assert.rejects(() => kofiApiRequest("GET", "/me"), /KOFI_API_KEY not set/);
+  });
+
+  it("detects JustTheHelper shop orders by direct_link_code", () => {
+    process.env.KOFI_HELPER_SHOP_ITEM_CODE = "helper99";
+    assert.equal(
+      isJustTheHelperShopOrder({
+        type: "Shop Order",
+        shop_items: [{ direct_link_code: "helper99" }]
+      }),
+      true
+    );
+    assert.equal(
+      isJustTheHelperShopOrder({
+        type: "Shop Order",
+        shop_items: [{ direct_link_code: "2c6f47f1fc" }]
+      }),
+      false
+    );
   });
 });

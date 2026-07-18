@@ -60,7 +60,7 @@ async function handleKofiWebhook(req, res) {
     const payload = parseKofiFormBody(body);
 
     const forward = await forwardKofiToJustTheHelper(body, payload);
-    if (forward.forwarded && payload.type !== "Shop Order") {
+    if (forward.forwarded) {
       sendJson(res, 200, { ok: true, forwarded: "justthehelper" });
       return;
     }

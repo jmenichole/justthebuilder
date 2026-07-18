@@ -5,6 +5,15 @@ import { log } from "../logger.js";
 const DEFAULT_BASE = "https://ko-fi.com/api/v1";
 const CATALOG_PATH = path.resolve("data", "kofi", "shop-catalog.json");
 
+/** Default Ko-fi shop listing for JustTheHelper guild ticket pass (one-time, ~31 days). */
+export const HELPER_SHOP_DEFAULTS = {
+  name: "JustTheHelper Guild Pass (1 month)",
+  price: 1.99,
+  description:
+    "Unlock support tickets for one Discord server for about 31 days. " +
+    "At checkout, paste your server link code from /subscribe info (JTH-XXXXXX) in the message field."
+};
+
 /**
  * Ko-fi API key (`KF_API_...`) from ko-fi.com → Settings → API / Applications.
  * Aliases supported for cross-repo tooling.
@@ -220,4 +229,64 @@ export function allowedShopCodes() {
     if (code) allowed.add(String(code));
   }
   return allowed;
+}
+
+/** @returns {Set<string>} */
+export function helperShopCodes() {
+  const allowed = new Set();
+  for (const key of ["KOFI_HELPER_SHOP_ITEM_CODE", "KOFI_HELPER_SHOP_URL"]) {
+    const v = process.env[key]?.trim();
+    if (!v) continue;
+    const fromUrl = v.match(/ko-fi\.com\/s\/([a-z0-9]+)/i)?.[1];
+    if (fromUrl) allowed.add(fromUrl);
+    else if (!v.includes("/")) allowed.add(v);
+  }
+  for (const item of loadShopCatalog()) {
+    const label = `${item.name || ""} ${item.description || ""}`;
+    if (/justthehelper|guild pass/i.test(label)) {
+      const code = item.direct_link_code;
+      if (code) allowed.add(String(code));
+    }
+  }
+  return allowed;
+}
+
+/**
+ * @param {object} payload Parsed Ko-fi webhook JSON
+ * @returns {boolean}
+ */
+export function isJustTheHelperShopOrder(payload) {
+  if (payload?.type !== "Shop Order") return false;
+  const allowed = helperShopCodes();
+  if (allowed.size === 0) return false;
+  const items = payload.shop_items || [];
+  return items.some((item) => {
+    const code = String(item.direct_link_code || "");
+    for (const allowedCode of allowed) {
+      if (code === allowedCode || code.includes(allowedCode)) return true;
+    }
+    return false;
+  });
+}
+
+export function helperShopUrl(directLinkCode) {
+  const code = String(directLinkCode || "").trim();
+  return code ? `https://ko-fi.com/s/${code}` : "";
+}
+
+/**
+ * Create the JustTheHelper guild pass shop item via Ko-fi API.
+ * @param {{ name?: string, price?: number, description?: string }} [overrides]
+ */
+export async function createHelperShopItem(overrides = {}) {
+  const created = await createShopItem({
+    ...HELPER_SHOP_DEFAULTS,
+    ...overrides
+  });
+  const code =
+    created?.direct_link_code ||
+    created?.directLinkCode ||
+    created?.code ||
+    created?.item?.direct_link_code;
+  return { created, shopUrl: helperShopUrl(code), directLinkCode: code || null };
 }

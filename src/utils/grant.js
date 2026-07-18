@@ -72,6 +72,11 @@ const grantCommandBuilder = new SlashCommandBuilder()
             opt.setName("description").setDescription("Product description").setRequired(false)
           )
       )
+      .addSubcommand((sub) =>
+        sub
+          .setName("shop-create-helper")
+          .setDescription("Create JustTheHelper Guild Pass shop item ($1.99)")
+      )
   )
   ;
 
@@ -154,7 +159,9 @@ export async function handleGrantInteraction(interaction, client) {
   const notify = interaction.options.getBoolean("notify") ?? true;
 
   if (group === "kofi") {
-    const { listShopItems, createShopItem, syncShopCatalog } = await import("./kofi/api.js");
+    const { listShopItems, createShopItem, createHelperShopItem, syncShopCatalog } = await import(
+      "./kofi/api.js"
+    );
     await interaction.deferReply({ ephemeral: true });
     try {
       if (sub === "shop-list") {
@@ -176,6 +183,23 @@ export async function handleGrantInteraction(interaction, client) {
         const items = await syncShopCatalog();
         return interaction.editReply({
           content: `✅ Synced **${items.length}** shop item(s) to \`data/kofi/shop-catalog.json\`.`
+        });
+      }
+      if (sub === "shop-create-helper") {
+        const { created, shopUrl, directLinkCode } = await createHelperShopItem();
+        return interaction.editReply({
+          content: [
+            "✅ **JustTheHelper Guild Pass** shop item created (or API accepted).",
+            directLinkCode ? `Shop: ${shopUrl}` : "",
+            directLinkCode
+              ? `Set on Fly:\n\`KOFI_HELPER_SHOP_ITEM_CODE=${directLinkCode}\` (justthebuilder)\n\`KOFI_PAGE_URL=${shopUrl}\` (justthehelper)`
+              : "Run `/grant kofi shop-sync` and check JSON for direct_link_code.",
+            "```json",
+            JSON.stringify(created, null, 2).slice(0, 1200),
+            "```"
+          ]
+            .filter(Boolean)
+            .join("\n")
         });
       }
       if (sub === "shop-create") {

@@ -15,13 +15,15 @@ dotenv.config();
 dotenv.config({ path: "src/config/.env" });
 
 import {
+  createHelperShopItem,
   createShopItem,
   getCurrentUser,
   getKofiApiKey,
   listShopItems,
   listTransactions,
   loadShopCatalog,
-  syncShopCatalog
+  syncShopCatalog,
+  HELPER_SHOP_DEFAULTS
 } from "../src/utils/kofi/api.js";
 
 function usage() {
@@ -31,6 +33,7 @@ Usage:
   node scripts/kofi-api.js whoami
   node scripts/kofi-api.js shop list [--page N] [--limit N]
   node scripts/kofi-api.js shop create --name "..." --price 0.99 [--description "..."]
+  node scripts/kofi-api.js shop create-helper [--name "..."] [--price 1.99]
   node scripts/kofi-api.js transactions [--page N] [--limit N]
   node scripts/kofi-api.js catalog sync
   node scripts/kofi-api.js catalog show
@@ -94,6 +97,30 @@ async function main() {
         const price = item.price ?? item.unit_price ?? "?";
         console.log(`- ${name} | $${price} | code: ${code}`);
       }
+      return;
+    }
+
+    if (cmd === "shop" && sub === "create-helper") {
+      const name = args.name || HELPER_SHOP_DEFAULTS.name;
+      const price = args.price != null ? args.price : HELPER_SHOP_DEFAULTS.price;
+      const description = args.description || HELPER_SHOP_DEFAULTS.description;
+      const { created, shopUrl, directLinkCode } = await createHelperShopItem({
+        name,
+        price: Number(price),
+        description
+      });
+      console.log("✅ JustTheHelper shop item created (or API accepted request):");
+      console.log(JSON.stringify(created, null, 2));
+      if (directLinkCode) {
+        console.log(`\nShop URL: ${shopUrl}`);
+        console.log("\nNext — set Fly secrets:");
+        console.log(`  flyctl secrets set KOFI_HELPER_SHOP_ITEM_CODE=${directLinkCode} -a justthebuilder`);
+        console.log(`  flyctl secrets set KOFI_PAGE_URL=${shopUrl} -a justthehelper`);
+      }
+      console.log("\nTip: run `catalog sync`, then paste buyer message in Ko-fi shop dashboard:");
+      console.log(
+        "  Paste your server code from /subscribe info (JTH-XXXXXX) in the checkout message field."
+      );
       return;
     }
 

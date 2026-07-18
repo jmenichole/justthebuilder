@@ -1,4 +1,5 @@
 import { log } from "../logger.js";
+import { isJustTheHelperShopOrder } from "./api.js";
 
 const HELPER_WEBHOOK_URL =
   process.env.JUSTTHEHELPER_WEBHOOK_URL || "https://justthehelper.fly.dev/webhooks/kofi";
@@ -19,6 +20,7 @@ export async function forwardKofiToJustTheHelper(rawBody, payload) {
 
   const shouldForward =
     payload.type === "Subscription" ||
+    (payload.type === "Shop Order" && isJustTheHelperShopOrder(payload)) ||
     (hasHelperCode && (payload.type === "Donation" || payload.type === "Shop Order"));
 
   if (!shouldForward) return { forwarded: false, reason: "not_helper_event" };
