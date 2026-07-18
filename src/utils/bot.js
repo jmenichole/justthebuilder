@@ -6,6 +6,7 @@ import { handleGuildCreate } from "./events/guildCreate.js";
 import { SetupCommandData, handleSetupInteraction, handleFreemiumButtons } from "./commands/setup.js";
 import { handleOnboardingComponent, handlePostBuildButtons } from "./onboarding/flow.js";
 import { log } from "./logger.js";
+import { skuIdsMatch } from "./entitlements.js";
 
 // Try multiple env locations (root .env first, then src/config/.env)
 const envCandidates = [".env", "src/config/.env"];
@@ -174,7 +175,7 @@ client.on("entitlementCreate", async (entitlement) => {
   const supportLink = process.env.SUPPORT_SERVER_INVITE || "https://discord.gg/NEePze3rZd";
 
   let message = "";
-  if (entitlement.skuId === basicPackId) {
+  if (skuIdsMatch(entitlement.skuId, basicPackId)) {
     message = [
       "🎉 **Thanks for grabbing the Basic Build Pack!**",
       "",
@@ -187,7 +188,7 @@ client.on("entitlementCreate", async (entitlement) => {
       "",
       `Need help? Join our support server: ${supportLink}`
     ].join("\n");
-  } else if (entitlement.skuId === subId) {
+  } else if (skuIdsMatch(entitlement.skuId, subId)) {
     message = [
       "🎉 **Thanks for your purchase!**",
       "",

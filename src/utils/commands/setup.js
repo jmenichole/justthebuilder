@@ -3,7 +3,7 @@ import { log } from "../logger.js";
 import { applyBlueprint, loadPersistedBlueprint } from "../applyBlueprint.js";
 import { postMessagesToExistingChannels } from "../builder/messages.js";
 import { loadGuildConfig } from "../storage/guildConfig.js";
-import { canApplyPolish, findUnconsumedBasicPack, guildHasPolishApplied, isBotOwner } from "../entitlements.js";
+import { canApplyPolish, fetchUserEntitlements, findUnconsumedBasicPack, guildHasPolishApplied, isBotOwner } from "../entitlements.js";
 import { clearManualPolishGrant, markGrandfatherFullUsed } from "../grandfather.js";
 import { postAnalytics } from "../ops.js";
 import fs from 'fs';
@@ -216,7 +216,15 @@ export async function applyStructureForGuild(guild, ownerUser) {
  * @returns {Promise<boolean>} true if polish/full was applied
  */
 export async function applyPolishForInteraction(interaction, guild, ownerUser) {
-  const access = canApplyPolish(interaction, guild);
+  if (guildHasPolishApplied(guild.id)) {
+    const content =
+      "✅ This server already has the full unlock applied.\nUse `/setup post-messages` or `/setup ticket-panel` if you need to refresh embeds or tickets.";
+    if (interaction.replied || interaction.deferred) await interaction.followUp({ ephemeral: true, content });
+    else await interaction.reply({ ephemeral: true, content });
+    return true;
+  }
+
+  const access = await canApplyPolish(interaction, guild);
   if (!access.allowed) {
     const content = [
       "🔒 **Full setup needs the Basic Build Pack ($0.99).**",
@@ -225,6 +233,16 @@ export async function applyPolishForInteraction(interaction, guild, ownerUser) {
     ].join("\n");
     if (interaction.replied || interaction.deferred) await interaction.followUp({ ephemeral: true, content });
     else await interaction.reply({ ephemeral: true, content });
+    postAnalytics({
+      event: "upgrade_denied",
+      title: "🔒 Unlock denied",
+      description: `**${guild.name}** — no pack, grant, or grandfather entitlement`,
+      fields: [
+        { name: "Guild", value: `\`${guild.id}\``, inline: true },
+        { name: "User", value: `<@${interaction.user.id}>`, inline: true },
+        { name: "Source", value: interaction.isButton() ? "DM button" : "slash command", inline: true }
+      ]
+    });
     return false;
   }
 
@@ -236,7 +254,11 @@ export async function applyPolishForInteraction(interaction, guild, ownerUser) {
   await applyBlueprint(guild, blueprint, { ownerUser, mode });
 
   if (access.reason === "pack") {
-    const ent = findUnconsumedBasicPack(interaction.entitlements);
+    const ent =
+      access.packEntitlement ||
+      findUnconsumedBasicPack(
+        await fetchUserEntitlements(interaction.client, interaction.user.id, interaction.entitlements)
+      );
     if (ent) await interaction.client.application.consumeEntitlement(ent.id);
     postAnalytics({
       event: "pack_consumed",
@@ -458,7 +480,7 @@ export async function handleSetupInteraction(interaction, client) {
       log(`Nuke done but DM failed: ${err.message}`);
     }
   } else if (sub === "post-messages") {
-    const access = canApplyPolish(interaction, interaction.guild);
+    const access = await canApplyPolish(interaction, interaction.guild);
     const polished = guildHasPolishApplied(interaction.guild.id);
     if (!access.allowed && !polished && !isBotOwner(interaction.user.id)) {
       return interaction.reply({
@@ -490,7 +512,7 @@ export async function handleSetupInteraction(interaction, client) {
       await interaction.followUp({ ephemeral: true, content: `❌ Failed: ${err.message}` });
     }
   } else if (sub === "ticket-panel") {
-    const access = canApplyPolish(interaction, interaction.guild);
+    const access = await canApplyPolish(interaction, interaction.guild);
     const polished = guildHasPolishApplied(interaction.guild.id);
     if (!access.allowed && !polished && !isBotOwner(interaction.user.id)) {
       return interaction.reply({
@@ -593,7 +615,7 @@ export async function handleSetupInteraction(interaction, client) {
 
     await interaction.followUp({ ephemeral: true, content: results.join('\n') });
   } else if (sub === 'edit-message') {
-    const access = canApplyPolish(interaction, interaction.guild);
+    const access = await canApplyPolish(interaction, interaction.guild);
     const polished = guildHasPolishApplied(interaction.guild.id);
     if (!access.allowed && !polished && !isBotOwner(interaction.user.id)) {
       return interaction.reply({

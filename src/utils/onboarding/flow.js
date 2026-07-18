@@ -201,7 +201,7 @@ export async function handlePostBuildButtons(interaction, client) {
         await interaction.followUp({ ephemeral: true, content: 'Could not find a server you belong to.' });
         return;
       }
-      const access = canApplyPolish(interaction, guild);
+      const access = await canApplyPolish(interaction, guild);
       const polished = guildHasPolishApplied(guild.id);
       if (access.allowed || polished || isBotOwner(interaction.user.id)) {
         const cfg = loadGuildConfig(guild.id);
