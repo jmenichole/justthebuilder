@@ -8,7 +8,7 @@ import { saveTicketConfig } from "./tickets/config.js";
 import { deployTicketPanelForGuild } from "./tickets/handler.js";
 import { loadGuildConfig, saveGuildConfig } from "./storage/guildConfig.js";
 import { postAnalytics } from "./ops.js";
-import { STRUCTURE_UPSELL } from "../config/marketing.js";
+import { STRUCTURE_UPSELL, justTheHelperUpsell } from "../config/marketing.js";
 import fs from "fs";
 import path from "path";
 
@@ -162,7 +162,7 @@ export async function applyBlueprint(guild, blueprint, { ownerUser, mode = "full
     if (mode === "structure") {
       await sendProgress(
         ownerUser,
-        `⏱️ ${buildSeconds}s · 📁 ${categoryCount} categories · 📄 ${channelCount} channels\n\n${STRUCTURE_UPSELL}`
+        `⏱️ ${buildSeconds}s · 📁 ${categoryCount} categories · 📄 ${channelCount} channels\n\n${STRUCTURE_UPSELL}${justTheHelperUpsell({ variant: "structure" })}`
       );
     } else {
       const embedNote =
@@ -174,7 +174,7 @@ export async function applyBlueprint(guild, blueprint, { ownerUser, mode = "full
       const heading = mode === "polish" ? "🎉 Your server has been polished!" : "🎉 Your server is ready!";
       await sendProgress(
         ownerUser,
-        `${heading}\n⏱️ Build time: ${buildSeconds} seconds\n📁 Categories: ${categoryCount}\n📄 Channels: ${channelCount}\n🧩 Roles: ${roleCount}${embedNote}${blueprint.tickets?.enabled ? "\n🎟️ Tickets: #create-ticket (Support & Bugs · Billing · Feature)" : ""}\n\nRecovery only: /setup post-messages or /setup ticket-panel`
+        `${heading}\n⏱️ Build time: ${buildSeconds} seconds\n📁 Categories: ${categoryCount}\n📄 Channels: ${channelCount}\n🧩 Roles: ${roleCount}${embedNote}${blueprint.tickets?.enabled ? "\n🎟️ Tickets: #create-ticket (Support & Bugs · Billing · Feature)" : ""}\n\nRecovery only: /setup post-messages or /setup ticket-panel${justTheHelperUpsell({ variant: mode })}`
       );
     }
   }
