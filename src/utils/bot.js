@@ -6,6 +6,7 @@ import { handleGuildCreate } from "./events/guildCreate.js";
 import { SetupCommandData, handleSetupInteraction, handleFreemiumButtons } from "./commands/setup.js";
 import { handleOnboardingComponent, handlePostBuildButtons } from "./onboarding/flow.js";
 import { log } from "./logger.js";
+import { isInteractionTokenError } from "./interactionUi.js";
 
 // Try multiple env locations (root .env first, then src/config/.env)
 const envCandidates = [".env", "src/config/.env"];
@@ -117,6 +118,10 @@ client.on("interactionCreate", async (i) => {
     await handleAnnounceInteraction(i, client);
     await handleGrantInteraction(i, client);
   } catch (err) {
+    if (isInteractionTokenError(err)) {
+      log(`Interaction token expired (${i.commandName || i.customId}): ${err.message}`);
+      return;
+    }
     log(`Interaction error: ${err.message}`);
     const { postError } = await import("./ops.js");
     postError({
