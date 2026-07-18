@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { handleGuildCreate } from "./events/guildCreate.js";
+import { HelpCommandData, handleHelpCommand } from "./commands/help.js";
+import { buildDiscordBasicPackPurchaseDm } from "../config/help.js";
 import { SetupCommandData, handleSetupInteraction, handleFreemiumButtons } from "./commands/setup.js";
 import { handleOnboardingComponent, handlePostBuildButtons } from "./onboarding/flow.js";
 import { log } from "./logger.js";
@@ -76,9 +78,14 @@ client.once("clientReady", async () => {
     const { asGuildCommand } = await import("./commands/ownerCommands.js");
     const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
     await rest.put(Routes.applicationCommands(client.user.id), {
-      body: [asGuildCommand(SetupCommandData), AnnounceCommandData, GrantCommandData]
+      body: [
+        asGuildCommand(SetupCommandData),
+        asGuildCommand(HelpCommandData),
+        AnnounceCommandData,
+        GrantCommandData
+      ]
     });
-    log("Registered /setup (guild), /announce + /grant (user-install owner)");
+    log("Registered /setup + /help (guild), /announce + /grant (user-install owner)");
   } catch (err) {
     log(`Command registration failed: ${err.message}`);
   }
@@ -109,6 +116,7 @@ client.on("interactionCreate", async (i) => {
     if (await handleTicketInteraction(i, client)) return;
 
     if (await handleFreemiumButtons(i, client)) return;
+    if (await handleHelpCommand(i)) return;
 
     const { handleAnnounceInteraction } = await import("./announce.js");
     const { handleGrantInteraction } = await import("./grant.js");
@@ -180,18 +188,7 @@ client.on("entitlementCreate", async (entitlement) => {
 
   let message = "";
   if (entitlement.skuId === basicPackId) {
-    message = [
-      "🎉 **Thanks for grabbing the Basic Build Pack!**",
-      "",
-      "Your pack is ready to use. Here's how to start:",
-      "1. Go to any Discord server **you own**",
-      "2. Run `/setup run` — the bot will DM you a quick interview",
-      "3. Run `/setup unlock` to apply roles, permissions, embeds, pins & tickets",
-      "",
-      "Your pack covers **one complete server build** on that server.",
-      "",
-      `Need help? Join our support server: ${supportLink}`
-    ].join("\n");
+    message = buildDiscordBasicPackPurchaseDm(supportLink);
   } else if (entitlement.skuId === subId) {
     message = [
       "🎉 **Thanks for your purchase!**",
