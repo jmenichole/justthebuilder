@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thanks — JustTheBuilder</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --text: #e8eaed;
+      --muted: #9aa0a6;
+      --accent: #57f287;
+      --gold: #f1c40f;
+      --purple: #9b59b6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: radial-gradient(circle at top, #1e2230, var(--bg));
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      max-width: 520px;
+      width: 100%;
+      background: var(--card);
+      border: 1px solid #2a2f3d;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+    h1 { margin: 0 0 8px; font-size: 1.6rem; }
+    .subtitle { color: var(--muted); margin-bottom: 24px; }
+    ol { padding-left: 1.2rem; line-height: 1.7; }
+    code, .code {
+      background: #0b0d12;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--gold);
+    }
+    .code {
+      display: inline-block;
+      font-size: 1.25rem;
+      letter-spacing: .08em;
+      margin: 12px 0;
+      padding: 10px 16px;
+    }
+    .note {
+      margin-top: 24px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: rgba(87, 242, 135, .08);
+      border: 1px solid rgba(87, 242, 135, .25);
+      font-size: .95rem;
+      color: var(--muted);
+    }
+    a { color: var(--accent); }
+    .shop-link { margin-top: 20px; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>🎉 Thanks for your purchase!</h1>
+    <p class="subtitle">JustTheBuilder — Basic Build Pack</p>
+
+    {{CODE_INSTRUCTIONS}}
+
+  {{CODE_BLOCK}}
+
+    <ol>
+      <li>Open Discord and go to a server <strong>you own</strong> with JustTheBuilder installed.</li>
+      <li>Run <code>/setup run</code> if you haven't finished the interview yet.</li>
+      <li>Run <code>/setup redeem code:YOUR-CODE</code> (use the code above or from your DM).</li>
+      <li>Run <code>/setup unlock</code> to apply roles, embeds, pins &amp; tickets.</li>
+    </ol>
+
+    <div class="note">
+      <strong>No code yet?</strong> If you entered your Discord User ID at checkout, check DMs from the bot.
+      Otherwise paste your <strong>Ko-fi transaction ID</strong> from your email receipt into
+      <code>/setup redeem</code>.
+    </div>
+
+    <p class="shop-link">
+      Need help? <a href="https://discord.gg/NEePze3rZd">Join the support server</a>
+    </p>
+  </main>
+</body>
+</html>

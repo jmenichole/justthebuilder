@@ -4,6 +4,7 @@
 
 import { hasGrandfatherFullLeft } from "./grandfather.js";
 import { loadGuildConfig } from "./storage/guildConfig.js";
+import { getPolishCredits } from "./userCredits.js";
 import { log } from "./logger.js";
 
 export function isBotOwner(userId) {
@@ -99,10 +100,14 @@ export async function fetchUserEntitlements(client, userId, interactionEntitleme
 }
 
 /**
- * @returns {Promise<{ allowed: boolean, reason: 'owner'|'pack'|'manual_grant'|'grandfather'|'denied', packEntitlement?: object }>}
+ * @returns {Promise<{ allowed: boolean, reason: 'owner'|'pack'|'credit'|'manual_grant'|'grandfather'|'denied', packEntitlement?: object }>}
  */
 export async function canApplyPolish(interaction, guild) {
   if (isBotOwner(interaction.user.id)) return { allowed: true, reason: "owner" };
+
+  if (getPolishCredits(interaction.user.id) > 0) {
+    return { allowed: true, reason: "credit" };
+  }
 
   const entitlements = await fetchUserEntitlements(
     interaction.client,

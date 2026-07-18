@@ -82,6 +82,7 @@ describe("canApplyPolish", () => {
     assert.equal(result.allowed, true);
     assert.equal(result.reason, "pack");
     assert.equal(result.packEntitlement.id, "ent-1");
+    assert.equal(result.packEntitlement.skuId, "sku-basic");
   });
 
   it("allows pack fetched from API when DM button omits entitlements", async () => {

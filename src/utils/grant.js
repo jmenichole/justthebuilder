@@ -1,8 +1,12 @@
 // Owner-only: registered as User Install (see ownerCommands.js). Handler checks BOT_OWNER_ID.
 import { SlashCommandBuilder, REST, Routes } from "discord.js";
+import { buildGrantFreeBuildOwnerDm } from "../config/help.js";
 import { asOwnerUserCommand } from "./commands/ownerCommands.js";
 import { log } from "./logger.js";
+import { loadPersistedBlueprint } from "./applyBlueprint.js";
+import { guildHasPolishApplied } from "./entitlements.js";
 import { grantManualPolishGrant } from "./grandfather.js";
+import { loadGuildConfig } from "./storage/guildConfig.js";
 
 const grantCommandBuilder = new SlashCommandBuilder()
   .setName("grant")
@@ -44,6 +48,38 @@ const grantCommandBuilder = new SlashCommandBuilder()
       .setDescription("Remove a test Pro entitlement from a user")
       .addUserOption((opt) =>
         opt.setName("user").setDescription("User to revoke").setRequired(true)
+      )
+  )
+  .addSubcommandGroup((group) =>
+    group
+      .setName("kofi")
+      .setDescription("Ko-fi shop & API (requires KOFI_API_KEY on server)")
+      .addSubcommand((sub) =>
+        sub.setName("shop-list").setDescription("List Ko-fi shop items via API")
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("shop-sync")
+          .setDescription("Sync shop catalog to data/kofi/shop-catalog.json")
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("shop-create")
+          .setDescription("Create a Ko-fi shop item via API")
+          .addStringOption((opt) =>
+            opt.setName("name").setDescription("Product name").setRequired(true)
+          )
+          .addNumberOption((opt) =>
+            opt.setName("price").setDescription("Price in USD").setRequired(true)
+          )
+          .addStringOption((opt) =>
+            opt.setName("description").setDescription("Product description").setRequired(false)
+          )
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("shop-create-helper")
+          .setDescription("Create JustTheHelper Guild Pass shop item ($1.99)")
       )
   )
   ;
@@ -122,8 +158,77 @@ export async function handleGrantInteraction(interaction, client) {
     });
   }
 
+  const group = interaction.options.getSubcommandGroup(false);
   const sub = interaction.options.getSubcommand();
   const notify = interaction.options.getBoolean("notify") ?? true;
+
+  if (group === "kofi") {
+    const { listShopItems, createShopItem, createHelperShopItem, syncShopCatalog } = await import(
+      "./kofi/api.js"
+    );
+    await interaction.deferReply({ ephemeral: true });
+    try {
+      if (sub === "shop-list") {
+        const { items } = await listShopItems();
+        if (!items.length) {
+          return interaction.editReply({ content: "No shop items returned from Ko-fi API." });
+        }
+        const lines = items.map((item) => {
+          const code = item.direct_link_code || item.directLinkCode || item.code || "?";
+          const name = item.name || item.title || "Unnamed";
+          const price = item.price ?? item.unit_price ?? "?";
+          return `• **${name}** — $${price} — \`${code}\``;
+        });
+        return interaction.editReply({
+          content: ["**Ko-fi shop items**", ...lines].join("\n")
+        });
+      }
+      if (sub === "shop-sync") {
+        const items = await syncShopCatalog();
+        return interaction.editReply({
+          content: `✅ Synced **${items.length}** shop item(s) to \`data/kofi/shop-catalog.json\`.`
+        });
+      }
+      if (sub === "shop-create-helper") {
+        const { created, shopUrl, directLinkCode } = await createHelperShopItem();
+        return interaction.editReply({
+          content: [
+            "✅ **JustTheHelper Guild Pass** shop item created (or API accepted).",
+            directLinkCode ? `Shop: ${shopUrl}` : "",
+            directLinkCode
+              ? `Set on Fly:\n\`KOFI_HELPER_SHOP_ITEM_CODE=${directLinkCode}\` (justthebuilder)\n\`KOFI_PAGE_URL=${shopUrl}\` (justthehelper)`
+              : "Run `/grant kofi shop-sync` and check JSON for direct_link_code.",
+            "```json",
+            JSON.stringify(created, null, 2).slice(0, 1200),
+            "```"
+          ]
+            .filter(Boolean)
+            .join("\n")
+        });
+      }
+      if (sub === "shop-create") {
+        const name = interaction.options.getString("name", true);
+        const price = interaction.options.getNumber("price", true);
+        const description = interaction.options.getString("description") || "";
+        const created = await createShopItem({ name, price, description });
+        return interaction.editReply({
+          content: [
+            `✅ **Shop item created:** ${name} ($${price})`,
+            "Run `/grant kofi shop-sync` then set `KOFI_SHOP_ITEM_CODE` on Fly if needed.",
+            "```json",
+            JSON.stringify(created, null, 2).slice(0, 1500),
+            "```"
+          ].join("\n")
+        });
+      }
+    } catch (err) {
+      log(`grant kofi failed: ${err.message}`);
+      return interaction.editReply({
+        content: `❌ Ko-fi API error: ${err.message}\n_Set KOFI_API_KEY on Fly. Create may be unsupported — use Ko-fi dashboard if needed._`
+      });
+    }
+    return;
+  }
 
   if (sub === "free-build") {
     const guildId = interaction.options.getString("guild_id").trim();
@@ -138,12 +243,22 @@ export async function handleGrantInteraction(interaction, client) {
 
     grantManualPolishGrant(guildId);
     const guild = await client.guilds.fetch(guildId).catch(() => null);
+    const hasBlueprint = Boolean(loadPersistedBlueprint(guildId));
+    const cfg = loadGuildConfig(guildId);
+    const structureApplied = Boolean(cfg.structureAppliedAt);
+    const polishApplied = guildHasPolishApplied(guildId);
+
+    const ownerNextSteps = polishApplied
+      ? "Server already unlocked — owner can refresh with `/setup post-messages` or `/setup ticket-panel`."
+      : hasBlueprint
+        ? "Owner should run **`/setup unlock`** in that server (interview is saved)."
+        : "Owner should run **`/setup run`** then **`/setup unlock`** in that server.";
 
     if (!guild) {
       return interaction.editReply({
         content: [
           `✅ **Free build granted** for server \`${guildId}\`.`,
-          "Owner can run `/setup run` once after the bot is invited.",
+          ownerNextSteps,
           notify
             ? "\n⚠️ Could not notify — bot is not in that server (no owner DM)."
             : ""
@@ -156,18 +271,12 @@ export async function handleGrantInteraction(interaction, client) {
       try {
         const owner = await guild.fetchOwner();
         await owner.send(
-          [
-            "🎁 **You've been granted a free server build** on **JustTheBuilder**.",
-            "",
-            `Server: **${guild.name}**`,
-            "",
-            "As server owner, run:",
-            "`/setup run`",
-            "",
-            "You'll get a DM interview, then a full AI build (channels, roles, rules, FAQ, embeds).",
-            "",
-            `Questions? ${supportLink()}`
-          ].join("\n")
+          buildGrantFreeBuildOwnerDm({
+            guildName: guild.name,
+            hasBlueprint,
+            structureApplied,
+            polishApplied
+          })
         );
         notifyResult = `\n📬 DM sent to **${owner.user.tag}**.`;
       } catch (err) {
@@ -179,7 +288,7 @@ export async function handleGrantInteraction(interaction, client) {
     return interaction.editReply({
       content: [
         `✅ **Free build granted** for **${guild.name}** (\`${guildId}\`).`,
-        "They can run `/setup run` once (owner only).",
+        ownerNextSteps,
         notifyResult
       ].join("\n")
     });
