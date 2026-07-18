@@ -22,11 +22,14 @@ export const STRUCTURE_UPSELL = [
 ].join("\n");
 
 /** Discord OAuth invite for the companion bot (set JUSTTHEHELPER_CLIENT_ID or JUSTTHEHELPER_INVITE_URL). */
+/** Default JustTheHelper application ID (override with JUSTTHEHELPER_CLIENT_ID). */
+export const DEFAULT_JUSTTHEHELPER_CLIENT_ID = "1525974622875422831";
+
 export function getJustTheHelperInviteUrl() {
   const direct = process.env.JUSTTHEHELPER_INVITE_URL?.trim();
   if (direct) return direct;
-  const clientId = process.env.JUSTTHEHELPER_CLIENT_ID?.trim();
-  if (!clientId) return null;
+  const clientId =
+    process.env.JUSTTHEHELPER_CLIENT_ID?.trim() || DEFAULT_JUSTTHEHELPER_CLIENT_ID;
   return `https://discord.com/oauth2/authorize?client_id=${clientId}&scope=bot%20applications.commands`;
 }
 

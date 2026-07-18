@@ -27,6 +27,14 @@ describe("justTheHelperUpsell", () => {
     assert.match(getJustTheHelperInviteUrl(), /client_id=123456789012345678/);
   });
 
+  it("defaults to production JustTheHelper client id", () => {
+    saveEnv("JUSTTHEHELPER_CLIENT_ID");
+    saveEnv("JUSTTHEHELPER_INVITE_URL");
+    delete process.env.JUSTTHEHELPER_CLIENT_ID;
+    delete process.env.JUSTTHEHELPER_INVITE_URL;
+    assert.match(getJustTheHelperInviteUrl(), /client_id=1525974622875422831/);
+  });
+
   it("returns upsell copy by default", () => {
     saveEnv("JUSTTHEHELPER_UPSELL");
     delete process.env.JUSTTHEHELPER_UPSELL;

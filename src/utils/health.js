@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { log } from "./logger.js";
 import { parseKofiFormBody, handleKofiPayload, publicThanksUrl } from "./kofi/webhook.js";
+import { forwardKofiToJustTheHelper } from "./kofi/forwardHelper.js";
 
 let _client = null;
 
@@ -57,6 +58,13 @@ async function handleKofiWebhook(req, res) {
   try {
     const body = await readBody(req);
     const payload = parseKofiFormBody(body);
+
+    const forward = await forwardKofiToJustTheHelper(body, payload);
+    if (forward.forwarded && payload.type !== "Shop Order") {
+      sendJson(res, 200, { ok: true, forwarded: "justthehelper" });
+      return;
+    }
+
     const result = await handleKofiPayload(payload, _client);
 
     if (!result.ok && result.reason === "invalid_token") {
