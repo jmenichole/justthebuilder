@@ -268,6 +268,7 @@ export function buildInterviewBrief(answers, guild) {
     `- Output MUST include style.theme and style.emojiPrefix when branding is not skip.`,
     `- INFO category MUST include welcome, rules (public-readonly + pinMessage), about, faq when embeds=yes.`,
     `- Each info channel needs message: { title, body } with real copy derived from About.`,
+    `- Keep message.body short (2–4 short paragraphs separated by blank lines). Put URLs in message.sections as { header: "Links", bullets: [...] } — never one dense paragraph.`,
     `- rules permissionsPreset: public-readonly; announcements permissionsPreset: announcement-lock.`,
     `- At least one general chat; staff private channels use staff-private or mods-only presets.`,
     `- Honor extras (verified-only channels, links in welcome/about bodies).`,
