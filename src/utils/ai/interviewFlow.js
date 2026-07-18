@@ -25,7 +25,7 @@ import {
   JUSTTHEBUILDER_BUILD_SUMMARY
 } from "../presets/justthebuilder.js";
 import { loadGuildConfig, saveGuildConfig } from "../storage/guildConfig.js";
-import { FREE_CHANNEL_LIMIT } from "../config/marketing.js";
+import { FREE_CHANNEL_LIMIT } from "../../config/marketing.js";
 import fs from "fs";
 import path from "path";
 

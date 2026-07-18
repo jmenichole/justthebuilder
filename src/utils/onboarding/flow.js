@@ -2,7 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder }
 import { buildPreviewBlueprint } from './preview.js';
 import { applyBlueprint, loadPersistedBlueprint, persistBlueprintOnly } from '../applyBlueprint.js';
 import { canApplyPolish, guildHasPolishApplied, isBotOwner } from '../entitlements.js';
-import { TAGLINE } from '../config/marketing.js';
+import { TAGLINE } from '../../config/marketing.js';
 import { loadGuildConfig } from '../storage/guildConfig.js';
 import { sendProgress } from '../progress.js';
 import { log } from '../logger.js';

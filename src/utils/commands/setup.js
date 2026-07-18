@@ -7,7 +7,7 @@ import { canApplyPolish, findUnconsumedBasicPack, fetchUserEntitlements, guildHa
 import { clearManualPolishGrant, markGrandfatherFullUsed } from "../grandfather.js";
 import { postAnalytics } from "../ops.js";
 import { deferEphemeral, isInteractionTokenError, replyEphemeral } from "../interactionUi.js";
-import { KOFI_BASIC_SHOP_URL, TAGLINE } from "../config/marketing.js";
+import { KOFI_BASIC_SHOP_URL, TAGLINE } from "../../config/marketing.js";
 import { consumePolishCredit } from "../userCredits.js";
 import fs from 'fs';
 import path from 'path';
