@@ -50,11 +50,16 @@ Redeploy both apps after setting secrets.
 
 ## 3. Ko-fi shop buyer message (manual)
 
-In the shop item settings, set **message for buyers**:
+In the shop item settings, set **message for buyers** on the **Helper** shop item only (`/subscribe`, code **JTH-XXXXXX**):
 
 ```
-Paste your server link code from Discord (/subscribe info) in the checkout message field: JTH-XXXXXX
+Thanks! Before you pay: run /subscribe info in Discord and paste your server code (JTH-XXXXXX) in this checkout message field.
+
+After payment: run /subscribe status — tickets unlock within a minute.
+Then /tickets setup and /tickets panel.
 ```
+
+**Do not** use this text on the JustTheBuilder ($0.99) shop item.
 
 **Digital delivery (Ko-fi requires one of these):**
 

@@ -73,10 +73,11 @@ Use these instead:
 | **Ko-fi → Webhooks** | `https://justthebuilder.fly.dev/webhooks/kofi` |
 | **Fly.io env** | `KOFI_VERIFICATION_TOKEN` from Ko-fi → Webhooks → Advanced |
 | **Optional link in shop message** | `https://justthebuilder.fly.dev/kofi/thanks` |
+| **Redirect buyer to URL** (digital delivery) | `https://justthebuilder.fly.dev/kofi/thanks` |
 
 ### Suggested shop thank-you message (paste in Ko-fi)
 
-**Basic Build Pack ($0.99):**
+**Basic Build Pack ($0.99)** — use on the **Builder** shop item only (`/setup`, code **JTB-XXXXXX**):
 
 ```
 Thanks for your purchase! 🎉
@@ -91,8 +92,9 @@ Free: AI designs your server. $0.99: we build it.
 Your code: check DMs from JustTheBuilder (if you entered your Discord User ID at checkout), or use the transaction ID from your Ko-fi email with /setup redeem.
 
 Full instructions: https://justthebuilder.fly.dev/kofi/thanks
-Support: https://discord.gg/NEePze3rZd
 ```
+
+**Do not** put JTH- codes or /subscribe on this product — that is JustTheHelper only.
 
 **Creator Pack ($2.99 — 3 unlock credits):** List as a separate Ko-fi shop item named "Creator Pack". Webhook auto-grants 3 credits when amount ≥ $2.50 or item name contains "Creator". Set `KOFI_CREATOR_SHOP_ITEM_CODE` if needed.
 
