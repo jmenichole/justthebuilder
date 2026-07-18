@@ -9,7 +9,8 @@
     "dev": "nodemon src/bot.js",
     "simulate": "node scripts/simulate.js",
     "dry-run": "node scripts/runLocalBlueprint.js data/blueprints/example.json || true",
-    "merge-tickets": "node scripts/mergeTicketCategories.js"
+    "merge-tickets": "node scripts/mergeTicketCategories.js",
+    "kofi": "node scripts/kofi-api.js"
   },
   "dependencies": {
     "@ai-sdk/groq": "^3.0.39",

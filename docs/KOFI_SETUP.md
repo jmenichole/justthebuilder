@@ -23,6 +23,44 @@ Find `direct_link_code` in the Ko-fi shop item URL (`ko-fi.com/s/XXXX`) or webho
 
 **Other bots' add-ons:** no action needed — they are ignored automatically. Each other bot would need its own webhook endpoint on its own Fly app (or a shared router you build separately).
 
+## Ko-fi API key (`KF_API_...`) — shop tools & agents
+
+Separate from the **webhook verification token**. Use the API key for listing/creating shop items, syncing your catalog, and querying transactions.
+
+### Where to store (never commit to git)
+
+| Use case | Where |
+|----------|--------|
+| **Production (JustTheBuilder)** | `flyctl secrets set KOFI_API_KEY=KF_API_... -a justthebuilder` |
+| **All your repos / GitHub Actions** | GitHub org → Settings → Secrets → `KOFI_API_KEY` |
+| **Cursor Cloud Agent** | Environment → Secrets → `KOFI_API_KEY` |
+| **Local / CLI** | `.env` in project root (gitignored) |
+
+**Rotate** any key that was pasted in chat or committed by mistake.
+
+### CLI (agents & local dev)
+
+```bash
+export KOFI_API_KEY="KF_API_..."   # use your rotated key
+npm run kofi -- whoami
+npm run kofi -- shop list
+npm run kofi -- shop create --name "Creator Pack" --price 2.99 --description "3 unlock credits"
+npm run kofi -- catalog sync
+npm run kofi -- transactions --limit 10
+```
+
+`catalog sync` writes `data/kofi/shop-catalog.json` so webhooks auto-recognize your shop item codes.
+
+### Discord (bot owner)
+
+After `KOFI_API_KEY` is on Fly:
+
+- `/grant kofi shop-list`
+- `/grant kofi shop-sync`
+- `/grant kofi shop-create name:... price:...`
+
+**Note:** Ko-fi may not allow creating products via API on all accounts. If `shop create` fails, create the item in the [Ko-fi shop dashboard](https://ko-fi.com/manage/shop) then run `catalog sync`.
+
 ## Important: Ko-fi has no custom redirect URL
 
 Ko-fi does **not** send buyers to an external URL after checkout. They stay on Ko-fi’s built-in thank-you screen.

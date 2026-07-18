@@ -1,5 +1,6 @@
 import { log } from "../logger.js";
 import { createCodeForOrder } from "./store.js";
+import { allowedShopCodes } from "./api.js";
 
 const SHOP_ORDER = "Shop Order";
 
@@ -27,23 +28,11 @@ export function verifyKofiToken(payload) {
   return payload?.verification_token === expected;
 }
 
-/** Default Basic Build Pack shop link suffix (ko-fi.com/s/2c6f47f1fc). */
-const DEFAULT_BASIC_SHOP_CODE = "2c6f47f1fc";
-
-/**
- * Ko-fi sends one webhook for the whole account — only issue JTB codes for our shop items.
- * @param {object} payload
- * @returns {boolean}
- */
 export function isJustTheBuilderShopOrder(payload) {
   const items = payload.shop_items || [];
   if (items.length === 0) return false;
 
-  const allowed = new Set([DEFAULT_BASIC_SHOP_CODE]);
-  const basic = process.env.KOFI_SHOP_ITEM_CODE?.trim();
-  const creator = process.env.KOFI_CREATOR_SHOP_ITEM_CODE?.trim();
-  if (basic) allowed.add(basic);
-  if (creator) allowed.add(creator);
+  const allowed = allowedShopCodes();
 
   return items.some((item) => {
     const code = String(item.direct_link_code || "");
