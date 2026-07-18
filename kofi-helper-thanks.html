@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thanks — JustTheHelper Guild Pass</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --text: #e8eaed;
+      --muted: #9aa0a6;
+      --accent: #ff5e5b;
+      --gold: #f1c40f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: radial-gradient(circle at top, #2a1a1a, var(--bg));
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      max-width: 540px;
+      width: 100%;
+      background: var(--card);
+      border: 1px solid #3a2f2f;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+    h1 { margin: 0 0 8px; font-size: 1.6rem; }
+    .subtitle { color: var(--muted); margin-bottom: 24px; }
+    ol { padding-left: 1.2rem; line-height: 1.75; }
+    code {
+      background: #0b0d12;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--gold);
+    }
+    .warn {
+      margin: 20px 0;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: rgba(255, 94, 91, .1);
+      border: 1px solid rgba(255, 94, 91, .35);
+      font-size: .95rem;
+    }
+    .note {
+      margin-top: 24px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: rgba(87, 242, 135, .08);
+      border: 1px solid rgba(87, 242, 135, .25);
+      font-size: .95rem;
+      color: var(--muted);
+    }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>🎫 Thanks for your purchase!</h1>
+    <p class="subtitle">JustTheHelper — Guild Pass (~31 days of tickets)</p>
+
+    <div class="warn">
+      <strong>Important:</strong> Tickets unlock only if you pasted your server link code
+      (<code>JTH-XXXXXX</code>) in the Ko-fi checkout <strong>message</strong> field.
+      If you skipped that step, run <code>/subscribe info</code> in Discord, note your code,
+      and contact support with your Ko-fi receipt.
+    </div>
+
+    <ol>
+      <li>Open the Discord server where <strong>JustTheHelper</strong> is installed.</li>
+      <li>Run <code>/subscribe status</code> — should show tickets unlocked within a minute.</li>
+      <li>Run <code>/tickets setup</code> (pick parent channel + staff role).</li>
+      <li>Run <code>/tickets panel</code> in the channel where members should open tickets.</li>
+    </ol>
+
+    <div class="note">
+      <strong>Free features</strong> (no pass needed): <code>/welcome set-role</code> →
+      <code>/welcome post</code>, and personal <code>/remind</code>.
+      <br /><br />
+      <strong>Renewal:</strong> buy this pass again before expiry (~31 days). Not auto-billed.
+    </div>
+
+    <p style="margin-top:20px;font-size:.9rem;color:var(--muted)">
+      Bot not installed yet?
+      <a href="https://discord.com/oauth2/authorize?client_id=1525974622875422831&amp;scope=bot%20applications.commands">Add JustTheHelper</a>
+    </p>
+  </main>
+</body>
+</html>

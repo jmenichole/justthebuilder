@@ -10,6 +10,7 @@ let _client = null;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const thanksHtmlPath = path.resolve(__dirname, "..", "..", "kofi-thanks.html");
+const helperThanksHtmlPath = path.resolve(__dirname, "..", "..", "kofi-helper-thanks.html");
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -28,6 +29,13 @@ function sendJson(res, status, obj) {
 function sendHtml(res, status, html) {
   res.writeHead(status, { "Content-Type": "text/html; charset=utf-8" });
   res.end(html);
+}
+
+function renderHelperThanksPage() {
+  if (fs.existsSync(helperThanksHtmlPath)) {
+    return fs.readFileSync(helperThanksHtmlPath, "utf-8");
+  }
+  return `<!DOCTYPE html><html><body><h1>Thanks for JustTheHelper Guild Pass!</h1><p>Run <code>/subscribe status</code> in Discord.</p></body></html>`;
 }
 
 function renderThanksPage(code) {
@@ -140,6 +148,14 @@ export function startHealthServer(client, port = Number(process.env.PORT) || 300
         return;
       }
 
+      if (
+        req.method === "GET" &&
+        (url.pathname === "/kofi/helper-thanks" || url.pathname === "/kofi-helper-thanks")
+      ) {
+        sendHtml(res, 200, renderHelperThanksPage());
+        return;
+      }
+
       sendJson(res, 404, { error: "Not found" });
     } catch (err) {
       log(`HTTP handler error: ${err.message}`);
@@ -149,7 +165,7 @@ export function startHealthServer(client, port = Number(process.env.PORT) || 300
 
   server.on("error", (err) => log(`Health server error: ${err.message}`));
   server.listen(port, "0.0.0.0", () =>
-    log(`HTTP server on :${port} — /health, POST /webhooks/kofi, GET /kofi/thanks`)
+    log(`HTTP server on :${port} — /health, POST /webhooks/kofi, GET /kofi/thanks, GET /kofi/helper-thanks`)
   );
   return server;
 }

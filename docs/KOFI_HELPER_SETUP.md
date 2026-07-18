@@ -53,10 +53,15 @@ Redeploy both apps after setting secrets.
 In the shop item settings, set **message for buyers**:
 
 ```
-Thanks! Paste your server link code from Discord (/subscribe info) in the checkout message field: JTH-XXXXXX
-
-Then run /subscribe status in your server — tickets unlock within a minute.
+Paste your server link code from Discord (/subscribe info) in the checkout message field: JTH-XXXXXX
 ```
+
+**Digital delivery (Ko-fi requires one of these):**
+
+| Option | Value |
+|--------|--------|
+| **Redirect buyer to URL** (recommended) | `https://justthebuilder.fly.dev/kofi/helper-thanks` |
+| **Upload a file** | Use `assets/justthehelper-guild-pass-readme.txt` from this repo |
 
 ---
 
