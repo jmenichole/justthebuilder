@@ -186,6 +186,8 @@ client.on("entitlementCreate", async (entitlement) => {
       "",
       "Your pack covers **one complete server build** on that server.",
       "",
+      "💡 **Already finished the interview?** Press **Unlock full setup** in your DMs — or run `/setup unlock` in your server if the button doesn't respond.",
+      "",
       `Need help? Join our support server: ${supportLink}`
     ].join("\n");
   } else if (skuIdsMatch(entitlement.skuId, subId)) {
