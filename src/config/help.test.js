@@ -13,6 +13,7 @@ describe("help copy", () => {
     assert.match(text, /\/setup run/);
     assert.match(text, /\/setup redeem/);
     assert.match(text, /\/setup unlock/);
+    assert.match(text, /\/setup restore/);
     assert.match(text, /\/help/);
   });
 

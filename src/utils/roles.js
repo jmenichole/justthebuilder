@@ -11,12 +11,29 @@ export async function createRoles(guild, roles) {
   const roleMap = {};
   for (const role of roles) {
     try {
+      // Reuse existing roles (nuke keeps roles; restore/polish must not duplicate).
+      const existing = guild.roles.cache.find(
+        (r) => !r.managed && r.name.toLowerCase() === String(role.name).toLowerCase()
+      );
+      if (existing) {
+        roleMap[role.name] = existing.id;
+        continue;
+      }
+
       // Auto preset detection
       let permNames = role.permissions || [];
       const lower = role.name.toLowerCase();
       if (!permNames.length) {
-        if (lower === 'admin') permNames = ['Administrator'];
-        else if (lower === 'moderator' || lower === 'mod') permNames = ['ManageMessages','EmbedLinks','AttachFiles','TimeoutMembers','ManageThreads'];
+        if (lower === "admin") permNames = ["Administrator"];
+        else if (lower === "moderator" || lower === "mod") {
+          permNames = [
+            "ManageMessages",
+            "EmbedLinks",
+            "AttachFiles",
+            "TimeoutMembers",
+            "ManageThreads"
+          ];
+        }
       }
       const permissions = resolveRolePermissions(permNames);
       const createOpts = {
