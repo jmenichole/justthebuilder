@@ -64,17 +64,26 @@ export async function injectInfoEmbeds(blueprint, guild, answers, selectedRuleTe
     ? FAQ_TEMPLATES[selectedRuleTemplate]
     : inferFaqTemplate(answers[A.ABOUT]);
 
-  const extraLine = formatExtrasForCopy(answers[A.EXTRAS]);
-  const aboutBody = [
-    `Welcome to ${guild.name}!`,
-    "",
-    answers[A.ABOUT] || "A community server.",
-    extraLine ? `\n${extraLine}` : "",
-    "",
-    "Read the rules, then say hi in general chat."
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const aboutSummary = answers[A.ABOUT] || "A community server.";
+  const linkLines = extractLinkLines(answers[A.EXTRAS]);
+  const welcomeMessage = {
+    title: `Welcome to ${guild.name}`,
+    body: [
+      aboutSummary,
+      "",
+      "Read the rules, then jump into general chat when you're ready."
+    ].join("\n"),
+    sections: [
+      {
+        header: "Start here",
+        bullets: ["Read #rules", "Skim #about + #faq", "Say hi in #general"]
+      },
+      ...(linkLines.length
+        ? [{ header: "Links", bullets: linkLines }]
+        : [])
+    ],
+    footer: "Built with JustTheBuilder"
+  };
 
   let injectedRules = false;
   if (!rulesChannel) {
@@ -91,7 +100,11 @@ export async function injectInfoEmbeds(blueprint, guild, answers, selectedRuleTe
   if (!rulesChannel.message) {
     const rulesBody =
       ruleTemplate.rules.map((r, i) => `${i + 1}. ${r}`).join("\n") + "\n\n" + ruleTemplate.footer;
-    rulesChannel.message = { title: ruleTemplate.title, body: rulesBody };
+    rulesChannel.message = {
+      title: ruleTemplate.title,
+      body: rulesBody,
+      footer: ruleTemplate.footer
+    };
     rulesChannel.pinMessage = true;
     rulesChannel.topic = rulesChannel.topic || "Server rules";
     injectedRules = true;
@@ -102,18 +115,12 @@ export async function injectInfoEmbeds(blueprint, guild, answers, selectedRuleTe
       name: "welcome",
       type: "text",
       topic: "Start here",
-      message: {
-        title: `👋 Welcome to ${guild.name}`,
-        body: aboutBody
-      }
+      message: { ...welcomeMessage }
     });
   } else {
     const welcome = existing.find((ch) => ch.name?.toLowerCase().includes("welcome"));
     if (welcome && !welcome.message) {
-      welcome.message = {
-        title: `👋 Welcome to ${guild.name}`,
-        body: aboutBody
-      };
+      welcome.message = { ...welcomeMessage };
       welcome.topic = welcome.topic || "Start here";
     }
   }
@@ -124,21 +131,31 @@ export async function injectInfoEmbeds(blueprint, guild, answers, selectedRuleTe
       type: "text",
       topic: "About this community",
       message: {
-        title: "🧩 About This Server",
-        body: aboutBody
+        title: "About this server",
+        body: aboutSummary,
+        sections: [
+          {
+            header: "What to do next",
+            bullets: ["Follow announcements", "Ask questions in #general or open a ticket"]
+          },
+          ...(linkLines.length ? [{ header: "Links", bullets: linkLines }] : [])
+        ]
       }
     });
   }
 
   if (!hasFaq) {
-    const faqBody = faqTemplate.map((qa) => `**Q: ${qa.q}**\nA: ${qa.a}`).join("\n\n");
     existing.push({
       name: "faq",
       type: "text",
       topic: "Common questions",
       message: {
-        title: "❓ Frequently Asked Questions",
-        body: faqBody
+        title: "FAQ",
+        body: "Quick answers — open a ticket if you need a human.",
+        sections: faqTemplate.slice(0, 6).map((qa) => ({
+          header: qa.q,
+          content: qa.a
+        }))
       }
     });
   }
@@ -152,6 +169,17 @@ function formatExtrasForCopy(extrasAnswer) {
   if (!e || /^none$/i.test(e)) return "";
   if (/links:/i.test(e)) return e.replace(/^links:\s*/i, "");
   return "";
+}
+
+/** Pull URLs / emails from extras for embed bullet fields. */
+function extractLinkLines(extrasAnswer) {
+  const text = formatExtrasForCopy(extrasAnswer);
+  if (!text) return [];
+  const urls = [...text.matchAll(/https?:\/\/[^\s)>\]"'`,]+/gi)].map((m) =>
+    m[0].replace(/[.,;:]+$/, "")
+  );
+  const emails = [...text.matchAll(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi)].map((m) => m[0]);
+  return [...new Set([...urls, ...emails])];
 }
 
 /**
