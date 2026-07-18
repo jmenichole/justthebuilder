@@ -26,7 +26,7 @@ jobs:
       - name: Build static site
         run: |
           mkdir -p _site
-          cp index.html terms.html privacy.html _site/
+          cp index.html terms.html privacy.html kofi-thanks.html _site/
           cp -r assets _site/ 2>/dev/null || true
           if [ -d docs ]; then cp -r docs _site/docs; fi
           touch _site/.nojekyll
