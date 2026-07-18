@@ -66,6 +66,19 @@ export const SetupCommandData = {
     },
     {
       type: 1,
+      name: "redeem",
+      description: "Redeem a Ko-fi purchase code for this server",
+      options: [
+        {
+          type: 3,
+          name: "code",
+          description: "JTB-XXXXXX code from Ko-fi DM, or Ko-fi transaction ID from email",
+          required: true
+        }
+      ]
+    },
+    {
+      type: 1,
       name: "post-messages",
       description: "Post rules/about/FAQ embeds into existing channels"
     },
@@ -175,7 +188,8 @@ export async function sendFreemiumPaywall(user, guild) {
         "✅ **Free now:** categories + channel names (empty channels)",
         "🔒 **$0.99 unlock:** roles, permissions, topics, embeds, pins, tickets",
         "",
-        "Your answers are saved. Unlock later with `/setup unlock` after buying the Basic Build Pack."
+        "Buy on [Ko-fi](https://ko-fi.com/s/2c6f47f1fc) or from the bot profile, then `/setup redeem` + `/setup unlock`.",
+        "Your answers are saved. Unlock later with `/setup unlock` after purchase."
       ].join("\n")
     );
   const row = new ActionRowBuilder().addComponents(
@@ -219,8 +233,10 @@ export async function applyPolishForInteraction(interaction, guild, ownerUser) {
   const access = canApplyPolish(interaction, guild);
   if (!access.allowed) {
     const content = [
-      "🔒 **Full setup needs the Basic Build Pack ($0.99).**",
-      "Buy it from my bot profile, then press Unlock again or run `/setup unlock`.",
+      "🔒 **Full setup needs a Basic Build Pack ($0.99).**",
+      "• [Buy on Ko-fi](https://ko-fi.com/s/2c6f47f1fc) → `/setup redeem` → `/setup unlock`",
+      "• Or buy from the bot profile → `/setup unlock`",
+      "",
       "Your interview answers are saved — no re-interview needed."
     ].join("\n");
     if (interaction.replied || interaction.deferred) await interaction.followUp({ ephemeral: true, content });
@@ -421,6 +437,10 @@ export async function handleSetupInteraction(interaction, client) {
       log(`unlock failed: ${err.message}`);
       await interaction.followUp({ ephemeral: true, content: `❌ Unlock failed: ${err.message}` });
     }
+  } else if (sub === "redeem") {
+    const { redeemKofiCode } = await import("../kofi/redeem.js");
+    const result = await redeemKofiCode(interaction);
+    await interaction.reply({ ephemeral: true, content: result.message });
   } else if (sub === "nuke") {
     const confirmed = await confirmDestructive(interaction, {
       title: "Delete ALL channels?",
