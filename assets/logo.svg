@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="JustTheBuilder">
+  <rect width="512" height="512" fill="#08080a"/>
+  <!-- Fat ring for Discord circular crop -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#FFD628" stroke-width="28"/>
+  <!-- Single large isometric cube — reads at 32px -->
+  <g transform="translate(256 270)">
+    <polygon fill="#FFEC64" stroke="#08080a" stroke-width="10" stroke-linejoin="round"
+      points="0,-140 140,-70 0,0 -140,-70"/>
+    <polygon fill="#FFCC00" stroke="#08080a" stroke-width="10" stroke-linejoin="round"
+      points="-140,-70 0,0 0,140 -140,70"/>
+    <polygon fill="#E8A000" stroke="#08080a" stroke-width="10" stroke-linejoin="round"
+      points="140,-70 0,0 0,140 140,70"/>
+  </g>
+</svg>
