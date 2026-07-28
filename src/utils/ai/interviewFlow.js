@@ -1,6 +1,6 @@
 import { askAI } from "./gateway.js";
 import { validateBlueprint, buildRepairPrompt, formatValidationErrors } from "./schemas.js";
-import { persistBlueprintOnly } from "../applyBlueprint.js";
+import { persistBlueprintOnly, loadPersistedBlueprint } from "../applyBlueprint.js";
 import { log } from "../logger.js";
 import {
   A,
@@ -24,6 +24,11 @@ import {
   loadJustTheBuilderBlueprint,
   JUSTTHEBUILDER_BUILD_SUMMARY
 } from "../presets/justthebuilder.js";
+import {
+  isEarnCordPreset,
+  loadEarnCordBlueprint,
+  EARNCORD_BUILD_SUMMARY
+} from "../presets/earncord.js";
 import { loadGuildConfig, saveGuildConfig } from "../storage/guildConfig.js";
 import { isBotOwner } from "../entitlements.js";
 import { FREE_CHANNEL_LIMIT } from "../../config/marketing.js";
@@ -128,33 +133,53 @@ async function generateBlueprint(answers, guild) {
 }
 
 export async function runInterview(user, guild, client, preset = null, isPremium = false) {
-  if (isSupportPreset(preset)) {
+  if (isSupportPreset(preset) || isEarnCordPreset(preset)) {
     const dm = await user.createDM();
+    const isEarnCord = isEarnCordPreset(preset);
+    const summary = isEarnCord ? EARNCORD_BUILD_SUMMARY : JUSTTHEBUILDER_BUILD_SUMMARY;
+    const presetId = isEarnCord ? "earncord" : "justthebuilder";
     try {
-      await dm.send(JUSTTHEBUILDER_BUILD_SUMMARY);
-      const blueprint = loadJustTheBuilderBlueprint(guild);
+      const existing = loadPersistedBlueprint(guild.id);
+      const cfg = loadGuildConfig(guild.id);
+      if (existing && cfg.lastPreset === presetId) {
+        await dm.send(
+          [
+            `✅ **${isEarnCord ? "EarnCord" : "JustTheBuilder"}** template is already saved for this server.`,
+            "Don’t re-run `/setup run` — that spam-sends this DM.",
+            "",
+            "Next: use an existing **Apply free structure** / **Unlock** message, or run **`/setup unlock`** in the server."
+          ].join("\n")
+        );
+        return { ok: true, blueprint: existing, skipPaywall: true };
+      }
+
+      await dm.send(summary);
+      const blueprint = isEarnCord
+        ? loadEarnCordBlueprint(guild)
+        : loadJustTheBuilderBlueprint(guild);
       const validation = validateBlueprint(blueprint);
       if (!validation.valid) {
         await dm.send(
-          "❌ Support preset blueprint invalid:\n" + formatValidationErrors(validation.errors)
+          `❌ ${isEarnCord ? "EarnCord" : "Support"} preset blueprint invalid:\n` +
+            formatValidationErrors(validation.errors)
         );
         return { ok: false };
       }
-      blueprint.lastPreset = "justthebuilder";
+      blueprint.lastPreset = presetId;
       persistBlueprintOnly(guild.id, blueprint);
       saveGuildConfig(guild.id, {
         ...loadGuildConfig(guild.id),
         lastBlueprint: blueprint,
         tickets: blueprint.tickets,
-        lastPreset: "justthebuilder"
+        lastPreset: presetId
       });
       await dm.send(
         "✅ Blueprint ready. Choose **Apply free structure** or **Unlock full setup — $0.99** next."
       );
       return { ok: true, blueprint };
     } catch (err) {
-      log(`justthebuilder preset failed: ${err.message}`);
-      await dm.send(`❌ Support preset build failed: ${err.message}`);
+      log(`${presetId} preset failed: ${err.message}`);
+      await dm.send(`❌ ${isEarnCord ? "EarnCord" : "Support"} preset build failed: ${err.message}`);
       return { ok: false };
     }
   }

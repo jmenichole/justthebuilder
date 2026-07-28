@@ -57,7 +57,8 @@ export const SetupCommandData = {
             { name: "🎥 Content Creator", value: "content" },
             { name: "💼 Professional", value: "professional" },
             { name: "🛡️ Support Server", value: "support" },
-            { name: "💎 JustTheBuilder Support Server", value: "justthebuilder" }
+            { name: "💎 JustTheBuilder Support Server", value: "justthebuilder" },
+            { name: "⚡ EarnCord Survey Server", value: "earncord" }
           ]
         }
       ]
@@ -446,13 +447,19 @@ export async function handleSetupInteraction(interaction, client) {
     const now = Date.now();
     const serverLast = serverCooldowns.get(interaction.guild.id) || 0;
     const userLast = userCooldowns.get(interaction.user.id) || 0;
-    if (now - serverLast < SERVER_COOLDOWN_MS && !isOwner) {
-      const wait = (((SERVER_COOLDOWN_MS - (now - serverLast)))/1000).toFixed(0);
-      return interaction.reply({ ephemeral: true, content: `Server cooldown active. Try again in ${wait}s.` });
+    if (now - serverLast < SERVER_COOLDOWN_MS) {
+      const wait = (((SERVER_COOLDOWN_MS - (now - serverLast))) / 1000).toFixed(0);
+      return interaction.reply({
+        ephemeral: true,
+        content: `Server cooldown active. Try again in ${wait}s. _(Template already ran? Use Unlock / Apply buttons in DMs instead of re-running.)_`
+      });
     }
-    if (now - userLast < USER_COOLDOWN_MS && !isOwner) {
-      const wait = (((USER_COOLDOWN_MS - (now - userLast)))/1000).toFixed(0);
-      return interaction.reply({ ephemeral: true, content: `Your personal cooldown active. Try again in ${wait}s.` });
+    if (now - userLast < USER_COOLDOWN_MS) {
+      const wait = ((USER_COOLDOWN_MS - (now - userLast)) / 1000).toFixed(0);
+      return interaction.reply({
+        ephemeral: true,
+        content: `Personal cooldown active. Try again in ${wait}s.`
+      });
     }
     serverCooldowns.set(interaction.guild.id, now);
     userCooldowns.set(interaction.user.id, now);
@@ -475,7 +482,14 @@ export async function handleSetupInteraction(interaction, client) {
         await interaction.followUp({ ephemeral: true, content: "Interview did not complete." });
         return;
       }
-      await sendFreemiumPaywall(owner.user, interaction.guild);
+      if (!result.skipPaywall) {
+        await sendFreemiumPaywall(owner.user, interaction.guild);
+      } else {
+        await interaction.followUp({
+          ephemeral: true,
+          content: "Blueprint already saved — skipped duplicate paywall DM. Use an existing unlock/apply message or `/setup unlock`."
+        });
+      }
     } catch (err) {
       log(`runInterview error: ${err.message}`);
       await interaction.followUp({ ephemeral: true, content: `❌ Something went wrong during setup: ${err.message}` });

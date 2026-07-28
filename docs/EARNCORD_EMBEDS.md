@@ -1,12 +1,11 @@
 # EarnCord embed pack
 
-Breathable copy for `#welcome`, `#about`, `#faq`, and `#rules`.  
-After deploy, either:
+Breathable copy for `#welcome`, `#about`, `#faq`, `#rules`, and `#start-here`.  
+Used by the **`/setup run preset:earncord`** template (`templates/earncord.json`).
 
-1. **`/setup edit-message`** on each JustTheBuilder embed (channel + message id), or  
-2. Update the saved blueprint messages then run **`/setup post-messages`** (posts new embeds — delete old ones first to avoid duplicates).
+Accent color: `#5ef2a8` (EarnCord mint).
 
-Accent color suggestion for branding: `#5ef2a8` (EarnCord mint).
+Site login: https://jmenichole.github.io/earncord/index.html#login
 
 ---
 
@@ -14,71 +13,24 @@ Accent color suggestion for branding: `#5ef2a8` (EarnCord mint).
 
 **Title:** Welcome to EarnCord
 
-**Body:**
-```
-Surveys that come to you.
+Surveys that come to you. Match Discord members to paid surveys, score quality, pay out in USDT.
 
-EarnCord matches Discord members to paid surveys, scores quality in public, and pays out in USDT when completes clear.
-```
+**Start here:** Read #rules · Check #how-it-works · Browse #surveys · Say hi in #general  
 
-**Sections:**
-- Start here → Read #rules · Check #how-it-works · Browse #surveys · Say hi in #general  
-- Links → https://jmenichole.github.io/earncord/ · Privacy · Terms  
+**Links:** https://jmenichole.github.io/earncord/ · Privacy · Terms  
 
-**Footer:** 18+ · Not affiliated with Discord Inc.
+**Footer note:** 18+ · Not affiliated with Discord Inc.
 
 ---
 
-## #about
+## #start-here
 
-**Title:** About EarnCord
-
-**Body:**
-```
-Official product + support server for EarnCord.
-
-Match → Verify → Payout. Partner postbacks credit your balance before you withdraw USDT.
-```
-
-**Sections:**
-- Product → https://jmenichole.github.io/earncord/  
-- Support → Open a ticket in #create-ticket · jmenichole007@outlook.com  
+1. Create account at `#login` (Privacy + Terms + 18+)
+2. Run `/start` in Discord
+3. Earn via `#surveys` / `/surveys` / `/score`
 
 ---
 
-## #faq
+## #about / #faq / #rules
 
-**Title:** FAQ
-
-**Body:**
-```
-Quick answers. For account or payout issues, open a ticket.
-```
-
-**Sections (one field each):**
-| Q | A |
-|---|---|
-| How does matching work? | We match survey inventory to your profile and public quality score — not endless offerwalls. |
-| What is the quality score? | Completes and honest answers raise it; fraud or low-quality traffic lowers match rate. |
-| When do USDT payouts clear? | After partner postbacks verify the complete. Withdraw when your balance is ready. |
-| Which partners? | Survey partners such as TheoremReach (and others as we go live). |
-| Do you ever ask for seed phrases? | Never. We only need a payout wallet address you control. |
-| How do I get help? | Open a support ticket — Account/Login, Survey Match, Payouts/USDT, Bug Report, or Other. |
-
----
-
-## #rules (tighten existing)
-
-**Title:** EarnCord Rules
-
-**Body:**
-```
-1. 18+ only — no exceptions.
-2. Be respectful. No harassment, scams, or spam.
-3. No fake completes, multi-accounting, or fraud.
-4. Never share seed phrases or private keys — staff will never ask.
-5. Keep support in tickets so we can help efficiently.
-6. Follow Discord’s Terms of Service.
-
-Break these and we may warn, mute, or ban.
-```
+See `templates/earncord.json` message bodies (FAQ covers matching, score, USDT, partners, seed phrases, tickets).
