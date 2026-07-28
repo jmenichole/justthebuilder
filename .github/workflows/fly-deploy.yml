@@ -25,6 +25,7 @@ jobs:
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
+      # SSO orgs: use `flyctl tokens org -o jamie-vargas` (not deploy tokens). See docs/FLY_DEPLOY.md
       - name: Deploy to Fly
         run: flyctl deploy -a justthebuilder --ha=false
         env:
