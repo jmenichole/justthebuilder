@@ -57,7 +57,8 @@ export const SetupCommandData = {
             { name: "🎥 Content Creator", value: "content" },
             { name: "💼 Professional", value: "professional" },
             { name: "🛡️ Support Server", value: "support" },
-            { name: "💎 JustTheBuilder Support Server", value: "justthebuilder" }
+            { name: "💎 JustTheBuilder Support Server", value: "justthebuilder" },
+            { name: "⚡ EarnCord Survey Server", value: "earncord" }
           ]
         }
       ]

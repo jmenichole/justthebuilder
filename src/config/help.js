@@ -16,6 +16,7 @@ export function buildHelpMessage() {
     `_${TAGLINE}_`,
     "",
     "🚀 **New server** → `/setup run`",
+    "⚡ **EarnCord server** → `/setup run preset:earncord`",
     "💎 **Bought on Ko-fi** → `/setup redeem` then `/setup unlock`",
     "🎁 **Got a free grant** → `/setup unlock` _(after interview, if you have one)_",
     "📝 **Fix empty embeds** → `/setup post-messages` _(after unlock)_",

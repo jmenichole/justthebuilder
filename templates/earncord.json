@@ -1,0 +1,357 @@
+{
+  "style": {
+    "theme": "earncord-mint"
+  },
+  "branding": {
+    "color": "#5ef2a8",
+    "accent": "#5ef2a8"
+  },
+  "community": true,
+  "roles": [
+    {
+      "name": "Founder",
+      "color": "#5ef2a8",
+      "permissions": ["Administrator"],
+      "isStaff": true
+    },
+    {
+      "name": "Support Agent",
+      "color": "#3498DB",
+      "permissions": [
+        "ManageMessages",
+        "EmbedLinks",
+        "AttachFiles",
+        "TimeoutMembers",
+        "KickMembers",
+        "BanMembers",
+        "ManageRoles"
+      ],
+      "isModerator": true
+    },
+    {
+      "name": "⚡ New Member",
+      "color": "#95A5A6"
+    },
+    {
+      "name": "🥉 Bronze Surveyor",
+      "color": "#CD7F32"
+    },
+    {
+      "name": "🥈 Silver Surveyor",
+      "color": "#C0C0C0"
+    },
+    {
+      "name": "🏆 Gold Surveyor",
+      "color": "#FFD700"
+    },
+    {
+      "name": "Member",
+      "color": "#5865F2"
+    }
+  ],
+  "categories": {
+    "WELCOME": [
+      {
+        "name": "welcome",
+        "type": "text",
+        "permissionsPreset": "public-readonly",
+        "topic": "Surveys that come to you",
+        "order": 0,
+        "message": {
+          "title": "Welcome to EarnCord",
+          "body": "Surveys that come to you.\n\nEarnCord matches Discord members to paid surveys, scores quality in public, and pays out in USDT when completes clear.\n\n18+ · Not affiliated with Discord Inc.",
+          "sections": [
+            {
+              "header": "Start here",
+              "bullets": [
+                "Read #rules",
+                "Check #how-it-works",
+                "Browse #surveys",
+                "Say hi in #general"
+              ]
+            },
+            {
+              "header": "Links",
+              "bullets": [
+                "https://jmenichole.github.io/earncord/",
+                "https://jmenichole.github.io/earncord/privacy.html",
+                "https://jmenichole.github.io/earncord/terms.html"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "rules",
+        "type": "text",
+        "permissionsPreset": "public-readonly",
+        "pinMessage": true,
+        "topic": "18+ · community guidelines",
+        "order": 1,
+        "message": {
+          "title": "EarnCord Rules",
+          "body": "1. 18+ only — no exceptions.\n2. Be respectful. No harassment, scams, or spam.\n3. No fake completes, multi-accounting, or fraud.\n4. Never share seed phrases or private keys — staff will never ask.\n5. Keep support in tickets so we can help efficiently.\n6. Follow Discord’s Terms of Service.\n\nBreak these and we may warn, mute, or ban."
+        }
+      },
+      {
+        "name": "about",
+        "type": "text",
+        "permissionsPreset": "public-readonly",
+        "topic": "What EarnCord is",
+        "order": 2,
+        "message": {
+          "title": "About EarnCord",
+          "body": "Official product + support server for EarnCord.\n\nMatch → Verify → Payout. Partner postbacks credit your balance before you withdraw USDT.",
+          "sections": [
+            {
+              "header": "Product",
+              "bullets": ["https://jmenichole.github.io/earncord/"]
+            },
+            {
+              "header": "Support",
+              "bullets": [
+                "Open a ticket in #create-ticket",
+                "jmenichole007@outlook.com"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "faq",
+        "type": "text",
+        "permissionsPreset": "public-readonly",
+        "topic": "Common questions",
+        "order": 3,
+        "message": {
+          "title": "FAQ",
+          "body": "Quick answers. For account or payout issues, open a ticket.",
+          "sections": [
+            {
+              "header": "How does matching work?",
+              "content": "We match survey inventory to your profile and public quality score — not endless offerwalls."
+            },
+            {
+              "header": "What is the quality score?",
+              "content": "Completes and honest answers raise it; fraud or low-quality traffic lowers match rate."
+            },
+            {
+              "header": "When do USDT payouts clear?",
+              "content": "After partner postbacks verify the complete. Withdraw when your balance is ready."
+            },
+            {
+              "header": "Which partners?",
+              "content": "Survey partners such as TheoremReach (and others as we go live)."
+            },
+            {
+              "header": "Do you ever ask for seed phrases?",
+              "content": "Never. We only need a payout wallet address you control."
+            },
+            {
+              "header": "How do I get help?",
+              "content": "Open a support ticket — Account/Login, Survey Match, Payouts/USDT, Bug Report, or Other."
+            }
+          ]
+        }
+      },
+      {
+        "name": "announcements",
+        "type": "announcement",
+        "permissionsPreset": "announcement-lock",
+        "topic": "Official EarnCord updates",
+        "order": 4
+      }
+    ],
+    "EARN": [
+      {
+        "name": "start-here",
+        "type": "text",
+        "permissionsPreset": "public-readonly",
+        "topic": "Sign up on the site, then run /start",
+        "order": 0,
+        "pinMessage": true,
+        "message": {
+          "title": "Start here — link your Discord",
+          "body": "EarnCord rewards start on the website, then continue in this server.",
+          "sections": [
+            {
+              "header": "1. Create your account",
+              "content": "Open https://jmenichole.github.io/earncord/index.html#login — accept Privacy, Terms, and 18+, then Continue with Discord."
+            },
+            {
+              "header": "2. Link in Discord",
+              "content": "Come back here and run /start in #bot-commands (or this channel). That saves your profile and applies your tier role."
+            },
+            {
+              "header": "3. Earn",
+              "bullets": [
+                "Browse #surveys",
+                "Check your score with /score",
+                "Withdraw USDT when your balance is ready"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "how-it-works",
+        "type": "text",
+        "permissionsPreset": "public-readonly",
+        "topic": "Match → Verify → Payout",
+        "order": 1,
+        "message": {
+          "title": "How EarnCord works",
+          "body": "Docs: https://jmenichole.github.io/earncord/docs/how-it-works.html",
+          "sections": [
+            {
+              "header": "Match",
+              "content": "We match survey inventory to your profile and quality score."
+            },
+            {
+              "header": "Verify",
+              "content": "Partner postbacks confirm completes before balance credits."
+            },
+            {
+              "header": "Payout",
+              "content": "Withdraw USDT to a wallet you control — never share seed phrases."
+            }
+          ]
+        }
+      },
+      {
+        "name": "surveys",
+        "type": "text",
+        "permissionsPreset": "public-readonly",
+        "topic": "Survey drops and match tips",
+        "order": 2,
+        "message": {
+          "title": "Surveys",
+          "body": "Check here for survey drops and tips. Run /surveys in #bot-commands for live options when the bot is online."
+        }
+      },
+      {
+        "name": "bot-commands",
+        "type": "text",
+        "topic": "Run /start · /surveys · /score here",
+        "order": 3,
+        "message": {
+          "title": "Bot commands",
+          "body": "Use this channel for EarnCord slash commands.",
+          "sections": [
+            {
+              "header": "Commands",
+              "bullets": [
+                "/start — link after website signup",
+                "/surveys — browse matches",
+                "/score — see your quality score"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "COMMUNITY": [
+      {
+        "name": "general",
+        "type": "text",
+        "topic": "Community chat — keep support in tickets",
+        "order": 0
+      }
+    ],
+    "SUPPORT": [
+      {
+        "name": "create-ticket",
+        "type": "text",
+        "permissionsPreset": "public-readonly",
+        "topic": "Open a private support ticket",
+        "order": 0,
+        "message": {
+          "title": "Open a support ticket",
+          "body": "Need help with your account, a survey match, or a USDT payout?\n\nAnyone can open a private ticket — pick a category below. Staff are notified automatically."
+        }
+      }
+    ],
+    "STAFF": [
+      {
+        "name": "staff-chat",
+        "type": "text",
+        "permissionsPreset": "staff-private",
+        "topic": "Internal staff chat",
+        "order": 0
+      },
+      {
+        "name": "staff-logs",
+        "type": "text",
+        "permissionsPreset": "staff-private",
+        "topic": "Ops / moderation notes",
+        "order": 1
+      }
+    ]
+  },
+  "categoryPrivacy": {
+    "STAFF": "staff-private"
+  },
+  "private": {
+    "staff": ["staff-chat", "staff-logs"]
+  },
+  "tickets": {
+    "enabled": true,
+    "panelChannel": "create-ticket",
+    "categories": [
+      {
+        "id": "account",
+        "label": "Account / Login",
+        "description": "Website signup, Discord OAuth, or linking issues",
+        "emoji": "🔑"
+      },
+      {
+        "id": "match",
+        "label": "Survey Match",
+        "description": "Matching, inventory, or quality-score questions",
+        "emoji": "📋"
+      },
+      {
+        "id": "payout",
+        "label": "Payouts / USDT",
+        "description": "Balance, withdrawals, or wallet questions",
+        "emoji": "💸"
+      },
+      {
+        "id": "bug",
+        "label": "Bug Report",
+        "description": "Something broken — include steps to reproduce",
+        "emoji": "🐛"
+      },
+      {
+        "id": "other",
+        "label": "Other",
+        "description": "Anything else",
+        "emoji": "💬"
+      }
+    ],
+    "staffRoles": ["Support Agent", "Founder"]
+  },
+  "welcomeScreen": {
+    "description": "EarnCord — surveys that come to you. 18+.",
+    "prompts": [
+      {
+        "title": "Read the rules",
+        "channel": "rules",
+        "emoji": "📜",
+        "description": "18+ community guidelines"
+      },
+      {
+        "title": "Start earning",
+        "channel": "start-here",
+        "emoji": "⚡",
+        "description": "Sign up, then run /start"
+      },
+      {
+        "title": "Get help",
+        "channel": "create-ticket",
+        "emoji": "🎟️",
+        "description": "Open a support ticket"
+      }
+    ]
+  }
+}
