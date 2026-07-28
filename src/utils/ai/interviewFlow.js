@@ -1,6 +1,6 @@
 import { askAI } from "./gateway.js";
 import { validateBlueprint, buildRepairPrompt, formatValidationErrors } from "./schemas.js";
-import { persistBlueprintOnly } from "../applyBlueprint.js";
+import { persistBlueprintOnly, loadPersistedBlueprint } from "../applyBlueprint.js";
 import { log } from "../logger.js";
 import {
   A,
@@ -139,6 +139,20 @@ export async function runInterview(user, guild, client, preset = null, isPremium
     const summary = isEarnCord ? EARNCORD_BUILD_SUMMARY : JUSTTHEBUILDER_BUILD_SUMMARY;
     const presetId = isEarnCord ? "earncord" : "justthebuilder";
     try {
+      const existing = loadPersistedBlueprint(guild.id);
+      const cfg = loadGuildConfig(guild.id);
+      if (existing && cfg.lastPreset === presetId) {
+        await dm.send(
+          [
+            `✅ **${isEarnCord ? "EarnCord" : "JustTheBuilder"}** template is already saved for this server.`,
+            "Don’t re-run `/setup run` — that spam-sends this DM.",
+            "",
+            "Next: use an existing **Apply free structure** / **Unlock** message, or run **`/setup unlock`** in the server."
+          ].join("\n")
+        );
+        return { ok: true, blueprint: existing, skipPaywall: true };
+      }
+
       await dm.send(summary);
       const blueprint = isEarnCord
         ? loadEarnCordBlueprint(guild)
